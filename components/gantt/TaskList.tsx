@@ -34,7 +34,7 @@ export function TaskList({
 			</div>
 
 			{/* スクロール可能なコンテンツ領域 */}
-			<div ref={scrollRef} className="overflow-x-auto" onScroll={onScroll}>
+			<div ref={scrollRef} className="overflow-x-hidden" onScroll={onScroll}>
 				<div className="min-w-max divide-y divide-gray-200">
 					{tasks.map((task) => (
 						<TaskRow

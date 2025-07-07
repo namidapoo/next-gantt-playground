@@ -19,7 +19,7 @@ export function Timeline({ dates, scrollRef, onScroll }: TimelineProps) {
 	});
 
 	return (
-		<div ref={scrollRef} className="overflow-x-hidden" onScroll={onScroll}>
+		<div ref={scrollRef} className="overflow-x-auto" onScroll={onScroll}>
 			<div className="min-w-max">
 				<div className="flex border-b border-gray-200">
 					{Array.from(months.entries()).map(([monthKey, monthDates]) => (

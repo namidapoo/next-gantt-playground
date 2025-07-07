@@ -1,7 +1,7 @@
 "use client";
 
 import { addDays, subDays } from "date-fns";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useGanttStore } from "@/lib/stores/gantt.store";
@@ -17,6 +17,7 @@ export function GanttChart() {
 	const { selectedPeriod, setSelectedPeriod } = useGanttStore();
 	const timelineScrollRef = useRef<HTMLDivElement>(null);
 	const contentScrollRef = useRef<HTMLDivElement>(null);
+	const ganttContainerRef = useRef<HTMLDivElement>(null);
 
 	const startDate = subDays(new Date(), DAYS_BEFORE_TODAY);
 
@@ -50,9 +51,34 @@ export function GanttChart() {
 			}
 		};
 
+	useEffect(() => {
+		const container = ganttContainerRef.current;
+		if (!container) return;
+
+		const handleWheel = (e: WheelEvent) => {
+			if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+				e.preventDefault();
+				const scrollAmount = e.deltaX || e.deltaY;
+
+				if (timelineScrollRef.current) {
+					timelineScrollRef.current.scrollLeft += scrollAmount;
+				}
+			}
+		};
+
+		container.addEventListener("wheel", handleWheel, { passive: false });
+
+		return () => {
+			container.removeEventListener("wheel", handleWheel);
+		};
+	}, []);
+
 	return (
 		<DndProvider backend={HTML5Backend}>
-			<div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+			<div
+				ref={ganttContainerRef}
+				className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+			>
 				<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200">
 					<div className="bg-gray-50 p-3 font-semibold flex items-center">
 						Tasks
