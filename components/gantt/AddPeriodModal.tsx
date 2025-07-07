@@ -187,7 +187,15 @@ export function AddPeriodModal({
 													<Calendar
 														mode="single"
 														selected={field.value}
-														onSelect={field.onChange}
+														onSelect={(date) => {
+															field.onChange(date);
+															// 日付選択後、ポップオーバーを閉じる
+															document.dispatchEvent(
+																new KeyboardEvent("keydown", {
+																	key: "Escape",
+																}),
+															);
+														}}
 														captionLayout="dropdown"
 													/>
 												</PopoverContent>
@@ -228,7 +236,15 @@ export function AddPeriodModal({
 													<Calendar
 														mode="single"
 														selected={field.value}
-														onSelect={field.onChange}
+														onSelect={(date) => {
+															field.onChange(date);
+															// 日付選択後、ポップオーバーを閉じる
+															document.dispatchEvent(
+																new KeyboardEvent("keydown", {
+																	key: "Escape",
+																}),
+															);
+														}}
 														captionLayout="dropdown"
 													/>
 												</PopoverContent>
