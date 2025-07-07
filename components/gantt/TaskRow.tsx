@@ -1,7 +1,7 @@
 "use client";
 
 import { differenceInDays, format } from "date-fns";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Task } from "@/lib/types/gantt";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ interface TaskRowProps {
 	onPeriodSelect: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
+	scrollRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export function TaskRow({
@@ -21,23 +22,85 @@ export function TaskRow({
 	dates,
 	startDate,
 	onPeriodSelect,
+	scrollRef,
 }: TaskRowProps) {
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragStart, setDragStart] = useState<number | null>(null);
 	const [dragEnd, setDragEnd] = useState<number | null>(null);
 	const gridRef = useRef<HTMLDivElement>(null);
+	const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
+	const currentScrollDirection = useRef<"left" | "right" | null>(null);
 	const { getTagById } = useGanttStore();
+
+	// スクロール設定定数
+	const SCROLL_ZONE_WIDTH = 80;
+	const SCROLL_AMOUNT = 10;
+	const SCROLL_INTERVAL = 50;
+
+	// スクロール機能
+	const startAutoScroll = useCallback(
+		(direction: "left" | "right") => {
+			if (!scrollRef?.current) return;
+
+			// 既に同じ方向でスクロール中の場合は何もしない
+			if (currentScrollDirection.current === direction) return;
+
+			// 既存のタイマーをクリア
+			if (scrollTimerRef.current) {
+				clearInterval(scrollTimerRef.current);
+				scrollTimerRef.current = null;
+			}
+
+			currentScrollDirection.current = direction;
+
+			const scroll = () => {
+				if (scrollRef.current) {
+					const scrollAmount =
+						direction === "left" ? -SCROLL_AMOUNT : SCROLL_AMOUNT;
+					scrollRef.current.scrollLeft += scrollAmount;
+				}
+			};
+
+			scroll();
+			scrollTimerRef.current = setInterval(scroll, SCROLL_INTERVAL);
+		},
+		[scrollRef],
+	);
+
+	const stopAutoScroll = useCallback(() => {
+		if (scrollTimerRef.current) {
+			clearInterval(scrollTimerRef.current);
+			scrollTimerRef.current = null;
+		}
+		currentScrollDirection.current = null;
+	}, []);
+
+	// 共通のスクロール判定ロジック
+	const checkScrollZone = useCallback(
+		(mouseX: number, containerRect: DOMRect) => {
+			const leftEdge = containerRect.left;
+			const rightEdge = containerRect.right;
+
+			// 左端スクロールゾーン
+			if (mouseX <= leftEdge + SCROLL_ZONE_WIDTH) {
+				startAutoScroll("left");
+			}
+			// 右端スクロールゾーン
+			else if (mouseX >= rightEdge - SCROLL_ZONE_WIDTH) {
+				startAutoScroll("right");
+			}
+			// 中央エリア
+			else {
+				stopAutoScroll();
+			}
+		},
+		[startAutoScroll, stopAutoScroll],
+	);
 
 	const handleMouseDown = (index: number) => {
 		setIsDragging(true);
 		setDragStart(index);
 		setDragEnd(index);
-	};
-
-	const handleMouseMove = (index: number) => {
-		if (isDragging && dragStart !== null) {
-			setDragEnd(index);
-		}
 	};
 
 	const handleMouseUp = () => {
@@ -57,7 +120,32 @@ export function TaskRow({
 		setIsDragging(false);
 		setDragStart(null);
 		setDragEnd(null);
+		stopAutoScroll();
 	};
+
+	// マウス位置ベースのスクロール判定
+	const handleMouseMove = useCallback(
+		(index: number, event: React.MouseEvent<HTMLDivElement>) => {
+			if (isDragging && dragStart !== null) {
+				setDragEnd(index);
+
+				// スクロールコンテナのサイズと位置を取得
+				if (!scrollRef?.current) return;
+
+				const containerRect = scrollRef.current.getBoundingClientRect();
+				const mouseX = event.clientX;
+
+				// マウスがコンテナの範囲内にあることを確認
+				if (mouseX >= containerRect.left && mouseX <= containerRect.right) {
+					checkScrollZone(mouseX, containerRect);
+				} else {
+					// マウスがコンテナの外にある場合はスクロールを停止
+					stopAutoScroll();
+				}
+			}
+		},
+		[isDragging, dragStart, scrollRef, checkScrollZone, stopAutoScroll],
+	);
 
 	// グローバルマウスイベントでドラッグ終了を管理
 	useEffect(() => {
@@ -80,14 +168,50 @@ export function TaskRow({
 			setIsDragging(false);
 			setDragStart(null);
 			setDragEnd(null);
+			stopAutoScroll();
+		};
+
+		const handleGlobalMouseMove = (event: MouseEvent) => {
+			if (!scrollRef?.current) return;
+
+			const containerRect = scrollRef.current.getBoundingClientRect();
+			const mouseX = event.clientX;
+			const mouseY = event.clientY;
+
+			// マウスがコンテナの範囲内にあるかチェック
+			const isInContainer =
+				mouseX >= containerRect.left &&
+				mouseX <= containerRect.right &&
+				mouseY >= containerRect.top &&
+				mouseY <= containerRect.bottom;
+
+			if (!isInContainer) {
+				stopAutoScroll();
+				return;
+			}
+
+			// コンテナ内でのスクロール判定
+			checkScrollZone(mouseX, containerRect);
 		};
 
 		document.addEventListener("mouseup", handleGlobalMouseUp);
+		document.addEventListener("mousemove", handleGlobalMouseMove);
 
 		return () => {
 			document.removeEventListener("mouseup", handleGlobalMouseUp);
+			document.removeEventListener("mousemove", handleGlobalMouseMove);
 		};
-	}, [isDragging, dragStart, dragEnd, task.id, dates, onPeriodSelect]);
+	}, [
+		isDragging,
+		dragStart,
+		dragEnd,
+		task.id,
+		dates,
+		onPeriodSelect,
+		stopAutoScroll,
+		checkScrollZone,
+		scrollRef,
+	]);
 
 	const isDateInPreview = (index: number) => {
 		if (!isDragging || dragStart === null || dragEnd === null) return false;
@@ -123,7 +247,7 @@ export function TaskRow({
 							tabIndex={0}
 							aria-label={`Select ${dateString}`}
 							onMouseDown={() => handleMouseDown(index)}
-							onMouseEnter={() => handleMouseMove(index)}
+							onMouseEnter={(e) => handleMouseMove(index, e)}
 							onMouseUp={handleMouseUp}
 							onKeyDown={(e) => {
 								if (e.key === "Enter" || e.key === " ") {

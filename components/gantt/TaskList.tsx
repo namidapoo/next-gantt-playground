@@ -43,6 +43,7 @@ export function TaskList({
 							dates={dates}
 							startDate={startDate}
 							onPeriodSelect={onPeriodSelect}
+							scrollRef={scrollRef}
 						/>
 					))}
 				</div>
