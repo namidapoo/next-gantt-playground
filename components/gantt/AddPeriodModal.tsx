@@ -54,6 +54,7 @@ export function AddPeriodModal({
 	const [editableEndDate, setEditableEndDate] = useState<Date | undefined>(
 		endDate ? new Date(endDate) : undefined,
 	);
+	const [isDateRangeInvalid, setIsDateRangeInvalid] = useState(false);
 
 	const task = tasks.find((t) => t.id === taskId);
 
@@ -62,12 +63,20 @@ export function AddPeriodModal({
 		setEditableEndDate(endDate ? new Date(endDate) : undefined);
 	}, [startDate, endDate]);
 
-	// 日付変更時にハイライトを更新
+	// 日付変更時にハイライトを更新と検証
 	useEffect(() => {
 		if (editableStartDate && editableEndDate) {
-			const startDateString = format(editableStartDate, "yyyy-MM-dd");
-			const endDateString = format(editableEndDate, "yyyy-MM-dd");
-			updateSelectedPeriod(startDateString, endDateString);
+			const isInvalid = editableStartDate > editableEndDate;
+			setIsDateRangeInvalid(isInvalid);
+
+			// 有効な日付範囲の場合のみハイライトを更新
+			if (!isInvalid) {
+				const startDateString = format(editableStartDate, "yyyy-MM-dd");
+				const endDateString = format(editableEndDate, "yyyy-MM-dd");
+				updateSelectedPeriod(startDateString, endDateString);
+			}
+		} else {
+			setIsDateRangeInvalid(false);
 		}
 	}, [editableStartDate, editableEndDate, updateSelectedPeriod]);
 
@@ -115,6 +124,8 @@ export function AddPeriodModal({
 										className={cn(
 											"w-full justify-start text-left font-normal",
 											!editableStartDate && "text-muted-foreground",
+											isDateRangeInvalid &&
+												"border-red-500 focus:border-red-500",
 										)}
 									>
 										<CalendarIcon className="mr-2 h-4 w-4" />
@@ -149,6 +160,8 @@ export function AddPeriodModal({
 										className={cn(
 											"w-full justify-start text-left font-normal",
 											!editableEndDate && "text-muted-foreground",
+											isDateRangeInvalid &&
+												"border-red-500 focus:border-red-500",
 										)}
 									>
 										<CalendarIcon className="mr-2 h-4 w-4" />
@@ -170,6 +183,18 @@ export function AddPeriodModal({
 							</Popover>
 						</div>
 					</div>
+
+					{/* エラーメッセージ */}
+					{isDateRangeInvalid && (
+						<div className="grid grid-cols-4 items-center gap-4">
+							<div />
+							<div className="col-span-3">
+								<p className="text-sm text-red-600 font-medium">
+									The start date must be before the end date.
+								</p>
+							</div>
+						</div>
+					)}
 
 					<div className="grid grid-cols-4 items-center gap-4">
 						<Label htmlFor="tag" className="text-right">
@@ -220,7 +245,11 @@ export function AddPeriodModal({
 					<Button
 						onClick={handleSubmit}
 						disabled={
-							!note || !selectedTagId || !editableStartDate || !editableEndDate
+							!note ||
+							!selectedTagId ||
+							!editableStartDate ||
+							!editableEndDate ||
+							isDateRangeInvalid
 						}
 					>
 						Add
