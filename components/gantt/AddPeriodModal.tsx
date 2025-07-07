@@ -1,8 +1,10 @@
 "use client";
 
 import { format } from "date-fns";
-import { useState } from "react";
+import { CalendarIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
 	Dialog,
 	DialogContent,
@@ -14,6 +16,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -21,6 +28,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { useGanttStore } from "@/lib/stores/gantt.store";
+import { cn } from "@/lib/utils";
 
 interface AddPeriodModalProps {
 	isOpen: boolean;
@@ -40,14 +48,31 @@ export function AddPeriodModal({
 	const { tags, addPeriod, tasks } = useGanttStore();
 	const [note, setNote] = useState("");
 	const [selectedTagId, setSelectedTagId] = useState(tags[0]?.id || "");
+	const [editableStartDate, setEditableStartDate] = useState<Date | undefined>(
+		startDate ? new Date(startDate) : undefined,
+	);
+	const [editableEndDate, setEditableEndDate] = useState<Date | undefined>(
+		endDate ? new Date(endDate) : undefined,
+	);
 
 	const task = tasks.find((t) => t.id === taskId);
 
+	useEffect(() => {
+		setEditableStartDate(startDate ? new Date(startDate) : undefined);
+		setEditableEndDate(endDate ? new Date(endDate) : undefined);
+	}, [startDate, endDate]);
+
 	const handleSubmit = () => {
-		if (note && selectedTagId) {
+		if (note && selectedTagId && editableStartDate && editableEndDate) {
+			// Check if start date is before or equal to end date
+			if (editableStartDate > editableEndDate) {
+				alert("Start date must be before or equal to end date");
+				return;
+			}
+
 			addPeriod(taskId, {
-				startDate,
-				endDate,
+				startDate: editableStartDate.toISOString().split("T")[0],
+				endDate: editableEndDate.toISOString().split("T")[0],
 				note,
 				tagId: selectedTagId,
 			});
@@ -74,11 +99,32 @@ export function AddPeriodModal({
 							Start Date
 						</Label>
 						<div className="col-span-3">
-							<Input
-								id="start-date"
-								value={format(new Date(startDate), "MMM d, yyyy")}
-								disabled
-							/>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										className={cn(
+											"w-full justify-start text-left font-normal",
+											!editableStartDate && "text-muted-foreground",
+										)}
+									>
+										<CalendarIcon className="mr-2 h-4 w-4" />
+										{editableStartDate ? (
+											format(editableStartDate, "MMM d, yyyy")
+										) : (
+											<span>Pick a date</span>
+										)}
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-auto p-0" align="start">
+									<Calendar
+										mode="single"
+										selected={editableStartDate}
+										onSelect={setEditableStartDate}
+										captionLayout="dropdown"
+									/>
+								</PopoverContent>
+							</Popover>
 						</div>
 					</div>
 
@@ -87,11 +133,32 @@ export function AddPeriodModal({
 							End Date
 						</Label>
 						<div className="col-span-3">
-							<Input
-								id="end-date"
-								value={format(new Date(endDate), "MMM d, yyyy")}
-								disabled
-							/>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										className={cn(
+											"w-full justify-start text-left font-normal",
+											!editableEndDate && "text-muted-foreground",
+										)}
+									>
+										<CalendarIcon className="mr-2 h-4 w-4" />
+										{editableEndDate ? (
+											format(editableEndDate, "MMM d, yyyy")
+										) : (
+											<span>Pick a date</span>
+										)}
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-auto p-0" align="start">
+									<Calendar
+										mode="single"
+										selected={editableEndDate}
+										onSelect={setEditableEndDate}
+										captionLayout="dropdown"
+									/>
+								</PopoverContent>
+							</Popover>
 						</div>
 					</div>
 
@@ -141,7 +208,12 @@ export function AddPeriodModal({
 					<Button variant="outline" onClick={onClose}>
 						Cancel
 					</Button>
-					<Button onClick={handleSubmit} disabled={!note || !selectedTagId}>
+					<Button
+						onClick={handleSubmit}
+						disabled={
+							!note || !selectedTagId || !editableStartDate || !editableEndDate
+						}
+					>
 						Add
 					</Button>
 				</DialogFooter>
