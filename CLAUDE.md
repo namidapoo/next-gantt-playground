@@ -45,7 +45,7 @@ bun check
 
 ## Architecture Overview
 
-This is a Next.js 15 gantt chart application using App Router with React 19. The project emphasizes type safety with TypeScript strict mode and uses modern tooling.
+This is a Next.js 15 interactive Gantt chart demo application using App Router with React 19. The project emphasizes type safety with TypeScript strict mode and uses modern tooling to create a comprehensive project management timeline interface.
 
 ### Key Technical Decisions
 
@@ -57,29 +57,42 @@ This is a Next.js 15 gantt chart application using App Router with React 19. The
 
 ### Project Structure
 
-- `app/` - Next.js App Router pages and layouts
+- `app/` - Next.js App Router pages and layouts (root page displays Gantt chart)
+- `components/gantt/` - Gantt chart specific components
 - `components/ui/` - shadcn/ui components
-- `lib/utils.ts` - Utility functions including `cn()` for className merging
+- `lib/stores/` - Zustand state management
+- `lib/types/` - TypeScript type definitions
+- `lib/data/` - Initial demo data (20 sample tasks)
+- `docs/` - Technical documentation
 
-### Gantt Chart Requirements
+### Implemented Features
 
-The application implements a gantt chart with these specifications:
+The application implements a fully interactive Gantt chart with these specifications:
 
 1. **Timeline**: X-axis shows 2 months starting from 1 week before today
-2. **Tasks**: Y-axis displays task items vertically
-3. **Interactions**:
+2. **Tasks**: Y-axis displays 20 sample task items with vertical scrolling
+3. **Layout**: Fixed header with scrollable content area, responsive design
+4. **Period Management**:
    - Drag & drop to select date ranges (full-day units)
-   - Modal for adding notes with pre-filled start/end dates
-   - Items can be added but not deleted or reordered
-4. **Tags**: Preset tags with fixed 1:1 color mapping
+   - Add new periods with modal form including notes and tags
+   - Edit existing periods by clicking on them
+   - Real-time period highlighting during form interaction
+   - Auto-closing calendar popovers after date selection
+5. **Tags**: 5 preset tags with fixed color mapping (Development, Design, Testing, Review, Release)
+6. **Form Validation**: React Hook Form + Zod with date range validation
+7. **Accessibility**: Proper ARIA labels, keyboard navigation, screen reader support
+8. **Scroll Synchronization**: Timeline and content horizontal scroll sync
+9. **Error Handling**: Form field warnings resolved, proper TypeScript typing
 
-### Planned Technologies (Not Yet Implemented)
+### Implemented Technologies
 
-- **State Management**: Zustand
-- **Data Fetching**: SWR
-- **Date Handling**: Day.js or date-fns
-- **Testing**: Vitest + Testing Library
-- **Drag & Drop**: react-dnd or native implementation
+- **State Management**: Zustand with typed stores
+- **Date Handling**: date-fns for formatting and calculations
+- **Form Management**: React Hook Form with Zod validation
+- **UI Components**: shadcn/ui with custom styling
+- **Icons**: Lucide React icon library
+- **Notifications**: Sonner for toast messages
+- **Drag & Drop**: Native HTML5 drag implementation
 
 ### Development Guidelines
 
