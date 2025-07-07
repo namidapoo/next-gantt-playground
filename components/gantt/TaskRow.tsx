@@ -1,7 +1,7 @@
 "use client";
 
 import { differenceInDays, format } from "date-fns";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Task } from "@/lib/types/gantt";
 import { cn } from "@/lib/utils";
@@ -59,6 +59,36 @@ export function TaskRow({
 		setDragEnd(null);
 	};
 
+	// グローバルマウスイベントでドラッグ終了を管理
+	useEffect(() => {
+		if (!isDragging) return;
+
+		const handleGlobalMouseUp = () => {
+			if (isDragging && dragStart !== null && dragEnd !== null) {
+				const start = Math.min(dragStart, dragEnd);
+				const end = Math.max(dragStart, dragEnd);
+
+				const period = {
+					taskId: task.id,
+					startDate: format(dates[start], "yyyy-MM-dd"),
+					endDate: format(dates[end], "yyyy-MM-dd"),
+				};
+
+				onPeriodSelect(period);
+			}
+
+			setIsDragging(false);
+			setDragStart(null);
+			setDragEnd(null);
+		};
+
+		document.addEventListener("mouseup", handleGlobalMouseUp);
+
+		return () => {
+			document.removeEventListener("mouseup", handleGlobalMouseUp);
+		};
+	}, [isDragging, dragStart, dragEnd, task.id, dates, onPeriodSelect]);
+
 	const isDateInPreview = (index: number) => {
 		if (!isDragging || dragStart === null || dragEnd === null) return false;
 		const start = Math.min(dragStart, dragEnd);
@@ -70,11 +100,6 @@ export function TaskRow({
 		<section
 			ref={gridRef}
 			className="relative h-16 select-none min-w-max"
-			onMouseLeave={() => {
-				if (isDragging) {
-					handleMouseUp();
-				}
-			}}
 			onMouseUp={handleMouseUp}
 			aria-label="Period selection grid"
 		>
