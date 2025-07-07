@@ -45,7 +45,7 @@ export function AddPeriodModal({
 	startDate,
 	endDate,
 }: AddPeriodModalProps) {
-	const { tags, addPeriod, tasks } = useGanttStore();
+	const { tags, addPeriod, tasks, updateSelectedPeriod } = useGanttStore();
 	const [note, setNote] = useState("");
 	const [selectedTagId, setSelectedTagId] = useState(tags[0]?.id || "");
 	const [editableStartDate, setEditableStartDate] = useState<Date | undefined>(
@@ -62,6 +62,15 @@ export function AddPeriodModal({
 		setEditableEndDate(endDate ? new Date(endDate) : undefined);
 	}, [startDate, endDate]);
 
+	// 日付変更時にハイライトを更新
+	useEffect(() => {
+		if (editableStartDate && editableEndDate) {
+			const startDateString = format(editableStartDate, "yyyy-MM-dd");
+			const endDateString = format(editableEndDate, "yyyy-MM-dd");
+			updateSelectedPeriod(startDateString, endDateString);
+		}
+	}, [editableStartDate, editableEndDate, updateSelectedPeriod]);
+
 	const handleSubmit = () => {
 		if (note && selectedTagId && editableStartDate && editableEndDate) {
 			// Check if start date is before or equal to end date
@@ -71,8 +80,8 @@ export function AddPeriodModal({
 			}
 
 			addPeriod(taskId, {
-				startDate: editableStartDate.toISOString().split("T")[0],
-				endDate: editableEndDate.toISOString().split("T")[0],
+				startDate: format(editableStartDate, "yyyy-MM-dd"),
+				endDate: format(editableEndDate, "yyyy-MM-dd"),
 				note,
 				tagId: selectedTagId,
 			});

@@ -30,7 +30,7 @@ export function TaskRow({
 	const gridRef = useRef<HTMLDivElement>(null);
 	const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
 	const currentScrollDirection = useRef<"left" | "right" | null>(null);
-	const { getTagById } = useGanttStore();
+	const { getTagById, selectedPeriod } = useGanttStore();
 
 	// スクロール設定定数
 	const SCROLL_ZONE_WIDTH = 80;
@@ -214,10 +214,44 @@ export function TaskRow({
 	]);
 
 	const isDateInPreview = (index: number) => {
-		if (!isDragging || dragStart === null || dragEnd === null) return false;
-		const start = Math.min(dragStart, dragEnd);
-		const end = Math.max(dragStart, dragEnd);
-		return index >= start && index <= end;
+		// ドラッグ中のプレビュー
+		if (isDragging && dragStart !== null && dragEnd !== null) {
+			const start = Math.min(dragStart, dragEnd);
+			const end = Math.max(dragStart, dragEnd);
+			return index >= start && index <= end;
+		}
+
+		// モーダルで選択された期間のハイライト
+		if (selectedPeriod && selectedPeriod.taskId === task.id) {
+			const selectedStartDate = new Date(selectedPeriod.startDate);
+			const selectedEndDate = new Date(selectedPeriod.endDate);
+			const currentDate = dates[index];
+
+			if (currentDate) {
+				// 日付のみで比較するため、時間部分を0にする
+				const currentDateOnly = new Date(
+					currentDate.getFullYear(),
+					currentDate.getMonth(),
+					currentDate.getDate(),
+				);
+				const startDateOnly = new Date(
+					selectedStartDate.getFullYear(),
+					selectedStartDate.getMonth(),
+					selectedStartDate.getDate(),
+				);
+				const endDateOnly = new Date(
+					selectedEndDate.getFullYear(),
+					selectedEndDate.getMonth(),
+					selectedEndDate.getDate(),
+				);
+
+				return (
+					currentDateOnly >= startDateOnly && currentDateOnly <= endDateOnly
+				);
+			}
+		}
+
+		return false;
 	};
 
 	return (
