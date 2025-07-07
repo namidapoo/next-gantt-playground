@@ -64,6 +64,171 @@
 			"id": "task3",
 			"name": "Mobile App",
 			"periods": []
+		},
+		{
+			"id": "task4",
+			"name": "DevOps & Infrastructure",
+			"periods": [
+				{
+					"id": "period4",
+					"startDate": "2025-01-05",
+					"endDate": "2025-01-07",
+					"note": "CI/CD Setup",
+					"tagId": "tag1"
+				}
+			]
+		},
+		{
+			"id": "task5",
+			"name": "Quality Assurance",
+			"periods": [
+				{
+					"id": "period5",
+					"startDate": "2025-01-16",
+					"endDate": "2025-01-18",
+					"note": "Unit Testing",
+					"tagId": "tag3"
+				}
+			]
+		},
+		{
+			"id": "task6",
+			"name": "Documentation",
+			"periods": []
+		},
+		{
+			"id": "task7",
+			"name": "User Research",
+			"periods": [
+				{
+					"id": "period6",
+					"startDate": "2025-01-03",
+					"endDate": "2025-01-05",
+					"note": "User Interviews",
+					"tagId": "tag2"
+				}
+			]
+		},
+		{
+			"id": "task8",
+			"name": "Security Audit",
+			"periods": []
+		},
+		{
+			"id": "task9",
+			"name": "Performance Optimization",
+			"periods": [
+				{
+					"id": "period7",
+					"startDate": "2025-01-25",
+					"endDate": "2025-01-27",
+					"note": "Code Optimization",
+					"tagId": "tag1"
+				}
+			]
+		},
+		{
+			"id": "task10",
+			"name": "Database Migration",
+			"periods": []
+		},
+		{
+			"id": "task11",
+			"name": "Third-party Integrations",
+			"periods": [
+				{
+					"id": "period8",
+					"startDate": "2025-01-12",
+					"endDate": "2025-01-14",
+					"note": "Payment Gateway",
+					"tagId": "tag1"
+				}
+			]
+		},
+		{
+			"id": "task12",
+			"name": "Localization",
+			"periods": []
+		},
+		{
+			"id": "task13",
+			"name": "Analytics Implementation",
+			"periods": [
+				{
+					"id": "period9",
+					"startDate": "2025-01-18",
+					"endDate": "2025-01-19",
+					"note": "Event Tracking",
+					"tagId": "tag1"
+				}
+			]
+		},
+		{
+			"id": "task14",
+			"name": "Content Management",
+			"periods": []
+		},
+		{
+			"id": "task15",
+			"name": "Email Templates",
+			"periods": [
+				{
+					"id": "period10",
+					"startDate": "2025-01-06",
+					"endDate": "2025-01-08",
+					"note": "Design Templates",
+					"tagId": "tag2"
+				}
+			]
+		},
+		{
+			"id": "task16",
+			"name": "Error Monitoring",
+			"periods": []
+		},
+		{
+			"id": "task17",
+			"name": "Load Testing",
+			"periods": [
+				{
+					"id": "period11",
+					"startDate": "2025-01-23",
+					"endDate": "2025-01-24",
+					"note": "Stress Testing",
+					"tagId": "tag3"
+				}
+			]
+		},
+		{
+			"id": "task18",
+			"name": "Search Functionality",
+			"periods": []
+		},
+		{
+			"id": "task19",
+			"name": "Notification System",
+			"periods": [
+				{
+					"id": "period12",
+					"startDate": "2025-01-28",
+					"endDate": "2025-01-30",
+					"note": "Push Notifications",
+					"tagId": "tag1"
+				}
+			]
+		},
+		{
+			"id": "task20",
+			"name": "Beta Release",
+			"periods": [
+				{
+					"id": "period13",
+					"startDate": "2025-02-01",
+					"endDate": "2025-02-03",
+					"note": "Beta Testing",
+					"tagId": "tag5"
+				}
+			]
 		}
 	]
 }

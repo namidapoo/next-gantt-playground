@@ -92,9 +92,10 @@ export function GanttChart() {
 		<DndProvider backend={HTML5Backend}>
 			<div
 				ref={ganttContainerRef}
-				className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+				className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full"
 			>
-				<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200">
+				{/* 固定ヘッダー */}
+				<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200 border-b border-gray-200 flex-shrink-0">
 					<div className="bg-gray-50 p-3 font-semibold flex items-center">
 						Tasks
 					</div>
@@ -105,7 +106,8 @@ export function GanttChart() {
 					/>
 				</div>
 
-				<div className="border-t border-gray-200">
+				{/* スクロール可能なコンテンツエリア */}
+				<div className="flex-1 overflow-y-auto">
 					<TaskList
 						dates={dates}
 						onPeriodSelect={handlePeriodSelect}
