@@ -165,6 +165,38 @@ function Calendar({
 						</td>
 					);
 				},
+				Dropdown: ({ value, onChange, options, ...restProps }) => {
+					// ユニークなIDを生成
+					const uniqueId = React.useId();
+					const ariaLabel = restProps["aria-label"] as string | undefined;
+					const isMonth = ariaLabel?.includes("month");
+					const name = isMonth
+						? `month-select-${uniqueId}`
+						: `year-select-${uniqueId}`;
+
+					// DOM要素に必要なプロパティのみ抽出
+					const selectProps = {
+						"aria-label": restProps["aria-label"],
+						disabled: restProps.disabled,
+						className: restProps.className,
+					};
+
+					return (
+						<select
+							{...selectProps}
+							name={name}
+							id={name}
+							value={value}
+							onChange={(e) => onChange?.(e)}
+						>
+							{options?.map((option) => (
+								<option key={option.value} value={option.value}>
+									{option.label}
+								</option>
+							))}
+						</select>
+					);
+				},
 				...components,
 			}}
 			{...props}
