@@ -10,7 +10,6 @@ import { DateRange } from "./DateRange";
 interface TaskRowProps {
 	task: Task;
 	dates: Date[];
-	startDate: Date;
 	onPeriodSelect: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
@@ -20,7 +19,6 @@ interface TaskRowProps {
 export function TaskRow({
 	task,
 	dates,
-	startDate,
 	onPeriodSelect,
 	scrollRef,
 }: TaskRowProps) {
@@ -299,9 +297,10 @@ export function TaskRow({
 			</div>
 
 			{task.periods.map((period) => {
-				const startOffset = differenceInDays(
-					new Date(period.startDate),
-					startDate,
+				// 日付の文字列で正確にマッチするインデックスを見つける
+				const periodStartDate = period.startDate;
+				const startOffset = dates.findIndex(
+					(date) => format(date, "yyyy-MM-dd") === periodStartDate,
 				);
 				const duration =
 					differenceInDays(

@@ -5,7 +5,6 @@ import { TaskRow } from "./TaskRow";
 
 interface TaskListProps {
 	dates: Date[];
-	startDate: Date;
 	onPeriodSelect: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
@@ -15,7 +14,6 @@ interface TaskListProps {
 
 export function TaskList({
 	dates,
-	startDate,
 	onPeriodSelect,
 	scrollRef,
 	onScroll,
@@ -41,7 +39,6 @@ export function TaskList({
 							key={task.id}
 							task={task}
 							dates={dates}
-							startDate={startDate}
 							onPeriodSelect={onPeriodSelect}
 							scrollRef={scrollRef}
 						/>

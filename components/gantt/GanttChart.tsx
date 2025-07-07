@@ -93,7 +93,6 @@ export function GanttChart() {
 				<div className="border-t border-gray-200">
 					<TaskList
 						dates={dates}
-						startDate={startDate}
 						onPeriodSelect={handlePeriodSelect}
 						scrollRef={contentScrollRef}
 						onScroll={handleScroll("content")}
