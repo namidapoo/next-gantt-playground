@@ -3,9 +3,11 @@ import { cn } from "@/lib/utils";
 
 interface TimelineProps {
 	dates: Date[];
+	scrollRef?: React.RefObject<HTMLDivElement | null>;
+	onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
 }
 
-export function Timeline({ dates }: TimelineProps) {
+export function Timeline({ dates, scrollRef, onScroll }: TimelineProps) {
 	const months = new Map<string, Date[]>();
 
 	dates.forEach((date) => {
@@ -17,7 +19,7 @@ export function Timeline({ dates }: TimelineProps) {
 	});
 
 	return (
-		<div className="overflow-x-auto">
+		<div ref={scrollRef} className="overflow-x-hidden" onScroll={onScroll}>
 			<div className="min-w-max">
 				<div className="flex border-b border-gray-200">
 					{Array.from(months.entries()).map(([monthKey, monthDates]) => (

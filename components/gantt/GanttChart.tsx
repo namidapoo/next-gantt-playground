@@ -1,7 +1,7 @@
 "use client";
 
 import { addDays, subDays } from "date-fns";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useGanttStore } from "@/lib/stores/gantt.store";
@@ -15,6 +15,8 @@ const TOTAL_DAYS = 60; // 2ヶ月分
 export function GanttChart() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const { selectedPeriod, setSelectedPeriod } = useGanttStore();
+	const timelineScrollRef = useRef<HTMLDivElement>(null);
+	const contentScrollRef = useRef<HTMLDivElement>(null);
 
 	const startDate = subDays(new Date(), DAYS_BEFORE_TODAY);
 
@@ -37,6 +39,17 @@ export function GanttChart() {
 		setSelectedPeriod(null);
 	};
 
+	const handleScroll =
+		(source: "timeline" | "content") => (e: React.UIEvent<HTMLDivElement>) => {
+			const scrollLeft = e.currentTarget.scrollLeft;
+
+			if (source === "timeline" && contentScrollRef.current) {
+				contentScrollRef.current.scrollLeft = scrollLeft;
+			} else if (source === "content" && timelineScrollRef.current) {
+				timelineScrollRef.current.scrollLeft = scrollLeft;
+			}
+		};
+
 	return (
 		<DndProvider backend={HTML5Backend}>
 			<div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -44,7 +57,11 @@ export function GanttChart() {
 					<div className="bg-gray-50 p-3 font-semibold flex items-center">
 						Tasks
 					</div>
-					<Timeline dates={dates} />
+					<Timeline
+						dates={dates}
+						scrollRef={timelineScrollRef}
+						onScroll={handleScroll("timeline")}
+					/>
 				</div>
 
 				<div className="border-t border-gray-200">
@@ -52,6 +69,8 @@ export function GanttChart() {
 						dates={dates}
 						startDate={startDate}
 						onPeriodSelect={handlePeriodSelect}
+						scrollRef={contentScrollRef}
+						onScroll={handleScroll("content")}
 					/>
 				</div>
 			</div>
