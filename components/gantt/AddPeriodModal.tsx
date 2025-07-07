@@ -1,8 +1,13 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -13,8 +18,15 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	Popover,
 	PopoverContent,
@@ -29,6 +41,26 @@ import {
 } from "@/components/ui/select";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import { cn } from "@/lib/utils";
+
+const FormSchema = z
+	.object({
+		startDate: z.date({
+			required_error: "Start date is required.",
+		}),
+		endDate: z.date({
+			required_error: "End date is required.",
+		}),
+		note: z.string().min(1, {
+			message: "Note is required.",
+		}),
+		tagId: z.string().min(1, {
+			message: "Tag is required.",
+		}),
+	})
+	.refine((data) => data.startDate <= data.endDate, {
+		message: "Start date must be before or equal to end date.",
+		path: ["endDate"],
+	});
 
 interface AddPeriodModalProps {
 	isOpen: boolean;
@@ -46,59 +78,70 @@ export function AddPeriodModal({
 	endDate,
 }: AddPeriodModalProps) {
 	const { tags, addPeriod, tasks, updateSelectedPeriod } = useGanttStore();
-	const [note, setNote] = useState("");
-	const [selectedTagId, setSelectedTagId] = useState(tags[0]?.id || "");
-	const [editableStartDate, setEditableStartDate] = useState<Date | undefined>(
-		startDate ? new Date(startDate) : undefined,
-	);
-	const [editableEndDate, setEditableEndDate] = useState<Date | undefined>(
-		endDate ? new Date(endDate) : undefined,
-	);
-	const [isDateRangeInvalid, setIsDateRangeInvalid] = useState(false);
-
 	const task = tasks.find((t) => t.id === taskId);
 
-	useEffect(() => {
-		setEditableStartDate(startDate ? new Date(startDate) : undefined);
-		setEditableEndDate(endDate ? new Date(endDate) : undefined);
-	}, [startDate, endDate]);
+	const form = useForm<z.infer<typeof FormSchema>>({
+		resolver: zodResolver(FormSchema),
+		defaultValues: {
+			startDate: startDate ? new Date(startDate) : undefined,
+			endDate: endDate ? new Date(endDate) : undefined,
+			note: "",
+			tagId: tags[0]?.id || "",
+		},
+	});
 
-	// 日付変更時にハイライトを更新と検証
 	useEffect(() => {
-		if (editableStartDate && editableEndDate) {
-			const isInvalid = editableStartDate > editableEndDate;
-			setIsDateRangeInvalid(isInvalid);
+		if (isOpen) {
+			form.reset({
+				startDate: startDate ? new Date(startDate) : undefined,
+				endDate: endDate ? new Date(endDate) : undefined,
+				note: "",
+				tagId: tags[0]?.id || "",
+			});
+		}
+	}, [isOpen, startDate, endDate, form, tags]);
 
-			// 有効な日付範囲の場合のみハイライトを更新
-			if (!isInvalid) {
-				const startDateString = format(editableStartDate, "yyyy-MM-dd");
-				const endDateString = format(editableEndDate, "yyyy-MM-dd");
+	// 日付変更時にハイライトを更新
+	useEffect(() => {
+		const subscription = form.watch((value) => {
+			if (value.startDate && value.endDate) {
+				const startDateString = format(value.startDate, "yyyy-MM-dd");
+				const endDateString = format(value.endDate, "yyyy-MM-dd");
 				updateSelectedPeriod(startDateString, endDateString);
 			}
-		} else {
-			setIsDateRangeInvalid(false);
-		}
-	}, [editableStartDate, editableEndDate, updateSelectedPeriod]);
+		});
+		return () => subscription.unsubscribe();
+	}, [form, updateSelectedPeriod]);
 
-	const handleSubmit = () => {
-		if (note && selectedTagId && editableStartDate && editableEndDate) {
-			// Check if start date is before or equal to end date
-			if (editableStartDate > editableEndDate) {
-				alert("Start date must be before or equal to end date");
-				return;
-			}
+	const onSubmit = (data: z.infer<typeof FormSchema>) => {
+		const requestBody = {
+			taskId,
+			startDate: format(data.startDate, "yyyy-MM-dd"),
+			endDate: format(data.endDate, "yyyy-MM-dd"),
+			note: data.note,
+			tagId: data.tagId,
+		};
 
-			addPeriod(taskId, {
-				startDate: format(editableStartDate, "yyyy-MM-dd"),
-				endDate: format(editableEndDate, "yyyy-MM-dd"),
-				note,
-				tagId: selectedTagId,
-			});
+		// Sonnerでリクエストボディを表示
+		toast("Period added successfully", {
+			description: (
+				<pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
+					<code className="text-white">
+						{JSON.stringify(requestBody, null, 2)}
+					</code>
+				</pre>
+			),
+		});
 
-			setNote("");
-			setSelectedTagId(tags[0]?.id || "");
-			onClose();
-		}
+		// 実際の期間追加処理
+		addPeriod(taskId, {
+			startDate: requestBody.startDate,
+			endDate: requestBody.endDate,
+			note: requestBody.note,
+			tagId: requestBody.tagId,
+		});
+
+		onClose();
 	};
 
 	if (!task) return null;
@@ -111,150 +154,156 @@ export function AddPeriodModal({
 					<DialogDescription>Add a new period to {task.name}</DialogDescription>
 				</DialogHeader>
 
-				<div className="grid gap-4 py-4">
-					<div className="grid grid-cols-4 items-center gap-4">
-						<Label htmlFor="start-date" className="text-right">
-							Start Date
-						</Label>
-						<div className="col-span-3">
-							<Popover>
-								<PopoverTrigger asChild>
-									<Button
-										variant="outline"
-										className={cn(
-											"w-full justify-start text-left font-normal",
-											!editableStartDate && "text-muted-foreground",
-											isDateRangeInvalid &&
-												"border-red-500 focus:border-red-500",
-										)}
-									>
-										<CalendarIcon className="mr-2 h-4 w-4" />
-										{editableStartDate ? (
-											format(editableStartDate, "MMM d, yyyy")
-										) : (
-											<span>Pick a date</span>
-										)}
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="w-auto p-0" align="start">
-									<Calendar
-										mode="single"
-										selected={editableStartDate}
-										onSelect={setEditableStartDate}
-										captionLayout="dropdown"
-									/>
-								</PopoverContent>
-							</Popover>
-						</div>
-					</div>
+				<Form {...form}>
+					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+						<div className="grid gap-4 py-4">
+							<FormField
+								control={form.control}
+								name="startDate"
+								render={({ field }) => (
+									<FormItem className="grid grid-cols-4 items-center gap-4">
+										<FormLabel className="text-right">Start Date</FormLabel>
+										<div className="col-span-3">
+											<Popover>
+												<PopoverTrigger asChild>
+													<FormControl>
+														<Button
+															variant="outline"
+															className={cn(
+																"w-full justify-start text-left font-normal",
+																!field.value && "text-muted-foreground",
+															)}
+														>
+															<CalendarIcon className="mr-2 h-4 w-4" />
+															{field.value ? (
+																format(field.value, "MMM d, yyyy")
+															) : (
+																<span>Pick a date</span>
+															)}
+														</Button>
+													</FormControl>
+												</PopoverTrigger>
+												<PopoverContent className="w-auto p-0" align="start">
+													<Calendar
+														mode="single"
+														selected={field.value}
+														onSelect={field.onChange}
+														captionLayout="dropdown"
+													/>
+												</PopoverContent>
+											</Popover>
+											<FormMessage />
+										</div>
+									</FormItem>
+								)}
+							/>
 
-					<div className="grid grid-cols-4 items-center gap-4">
-						<Label htmlFor="end-date" className="text-right">
-							End Date
-						</Label>
-						<div className="col-span-3">
-							<Popover>
-								<PopoverTrigger asChild>
-									<Button
-										variant="outline"
-										className={cn(
-											"w-full justify-start text-left font-normal",
-											!editableEndDate && "text-muted-foreground",
-											isDateRangeInvalid &&
-												"border-red-500 focus:border-red-500",
-										)}
-									>
-										<CalendarIcon className="mr-2 h-4 w-4" />
-										{editableEndDate ? (
-											format(editableEndDate, "MMM d, yyyy")
-										) : (
-											<span>Pick a date</span>
-										)}
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="w-auto p-0" align="start">
-									<Calendar
-										mode="single"
-										selected={editableEndDate}
-										onSelect={setEditableEndDate}
-										captionLayout="dropdown"
-									/>
-								</PopoverContent>
-							</Popover>
-						</div>
-					</div>
+							<FormField
+								control={form.control}
+								name="endDate"
+								render={({ field }) => (
+									<FormItem className="grid grid-cols-4 items-center gap-4">
+										<FormLabel className="text-right">End Date</FormLabel>
+										<div className="col-span-3">
+											<Popover>
+												<PopoverTrigger asChild>
+													<FormControl>
+														<Button
+															variant="outline"
+															className={cn(
+																"w-full justify-start text-left font-normal",
+																!field.value && "text-muted-foreground",
+															)}
+														>
+															<CalendarIcon className="mr-2 h-4 w-4" />
+															{field.value ? (
+																format(field.value, "MMM d, yyyy")
+															) : (
+																<span>Pick a date</span>
+															)}
+														</Button>
+													</FormControl>
+												</PopoverTrigger>
+												<PopoverContent className="w-auto p-0" align="start">
+													<Calendar
+														mode="single"
+														selected={field.value}
+														onSelect={field.onChange}
+														captionLayout="dropdown"
+													/>
+												</PopoverContent>
+											</Popover>
+											<FormMessage />
+										</div>
+									</FormItem>
+								)}
+							/>
 
-					{/* エラーメッセージ */}
-					{isDateRangeInvalid && (
-						<div className="grid grid-cols-4 items-center gap-4">
-							<div />
-							<div className="col-span-3">
-								<p className="text-sm text-red-600 font-medium">
-									The start date must be before the end date.
-								</p>
-							</div>
-						</div>
-					)}
+							<FormField
+								control={form.control}
+								name="tagId"
+								render={({ field }) => (
+									<FormItem className="grid grid-cols-4 items-center gap-4">
+										<FormLabel className="text-right">Tag</FormLabel>
+										<div className="col-span-3">
+											<Select
+												onValueChange={field.onChange}
+												defaultValue={field.value}
+											>
+												<FormControl>
+													<SelectTrigger>
+														<SelectValue placeholder="Select a tag" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{tags.map((tag) => (
+														<SelectItem key={tag.id} value={tag.id}>
+															<div className="flex items-center gap-2">
+																<div
+																	className="w-3 h-3 rounded-full"
+																	style={{ backgroundColor: tag.color }}
+																/>
+																{tag.name}
+															</div>
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											<FormMessage />
+										</div>
+									</FormItem>
+								)}
+							/>
 
-					<div className="grid grid-cols-4 items-center gap-4">
-						<Label htmlFor="tag" className="text-right">
-							Tag
-						</Label>
-						<div className="col-span-3">
-							<Select value={selectedTagId} onValueChange={setSelectedTagId}>
-								<SelectTrigger id="tag">
-									<SelectValue placeholder="Select a tag" />
-								</SelectTrigger>
-								<SelectContent>
-									{tags.map((tag) => (
-										<SelectItem key={tag.id} value={tag.id}>
-											<div className="flex items-center gap-2">
-												<div
-													className="w-3 h-3 rounded-full"
-													style={{ backgroundColor: tag.color }}
+							<FormField
+								control={form.control}
+								name="note"
+								render={({ field }) => (
+									<FormItem className="grid grid-cols-4 items-center gap-4">
+										<FormLabel className="text-right">Note</FormLabel>
+										<div className="col-span-3">
+											<FormControl>
+												<Input
+													placeholder="Enter work description"
+													autoFocus
+													{...field}
 												/>
-												{tag.name}
-											</div>
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-					</div>
-
-					<div className="grid grid-cols-4 items-center gap-4">
-						<Label htmlFor="note" className="text-right">
-							Note
-						</Label>
-						<div className="col-span-3">
-							<Input
-								id="note"
-								value={note}
-								onChange={(e) => setNote(e.target.value)}
-								placeholder="Enter work description"
-								autoFocus
+											</FormControl>
+											<FormMessage />
+										</div>
+									</FormItem>
+								)}
 							/>
 						</div>
-					</div>
-				</div>
 
-				<DialogFooter>
-					<Button variant="outline" onClick={onClose}>
-						Cancel
-					</Button>
-					<Button
-						onClick={handleSubmit}
-						disabled={
-							!note ||
-							!selectedTagId ||
-							!editableStartDate ||
-							!editableEndDate ||
-							isDateRangeInvalid
-						}
-					>
-						Add
-					</Button>
-				</DialogFooter>
+						<DialogFooter>
+							<Button variant="outline" onClick={onClose} type="button">
+								Cancel
+							</Button>
+							<Button type="submit">Add</Button>
+						</DialogFooter>
+					</form>
+				</Form>
 			</DialogContent>
 		</Dialog>
 	);
