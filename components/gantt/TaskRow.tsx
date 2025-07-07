@@ -3,7 +3,7 @@
 import { differenceInDays, format } from "date-fns";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGanttStore } from "@/lib/stores/gantt.store";
-import type { Task } from "@/lib/types/gantt";
+import type { Period, Task } from "@/lib/types/gantt";
 import { cn } from "@/lib/utils";
 import { DateRange } from "./DateRange";
 
@@ -13,6 +13,7 @@ interface TaskRowProps {
 	onPeriodSelect: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
+	onPeriodEdit?: (period: Period) => void;
 	scrollRef?: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -20,6 +21,7 @@ export function TaskRow({
 	task,
 	dates,
 	onPeriodSelect,
+	onPeriodEdit,
 	scrollRef,
 }: TaskRowProps) {
 	const [isDragging, setIsDragging] = useState(false);
@@ -318,6 +320,7 @@ export function TaskRow({
 						startOffset={startOffset}
 						duration={duration}
 						color={tag?.color || "#6B7280"}
+						onEdit={onPeriodEdit}
 					/>
 				);
 			})}

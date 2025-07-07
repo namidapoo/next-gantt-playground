@@ -1,6 +1,7 @@
 "use client";
 
 import { useGanttStore } from "@/lib/stores/gantt.store";
+import type { Period } from "@/lib/types/gantt";
 import { TaskRow } from "./TaskRow";
 
 interface TaskListProps {
@@ -8,6 +9,7 @@ interface TaskListProps {
 	onPeriodSelect: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
+	onPeriodEdit?: (period: Period) => void;
 	scrollRef?: React.RefObject<HTMLDivElement | null>;
 	onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
 }
@@ -15,6 +17,7 @@ interface TaskListProps {
 export function TaskList({
 	dates,
 	onPeriodSelect,
+	onPeriodEdit,
 	scrollRef,
 	onScroll,
 }: TaskListProps) {
@@ -40,6 +43,7 @@ export function TaskList({
 							task={task}
 							dates={dates}
 							onPeriodSelect={onPeriodSelect}
+							onPeriodEdit={onPeriodEdit}
 							scrollRef={scrollRef}
 						/>
 					))}

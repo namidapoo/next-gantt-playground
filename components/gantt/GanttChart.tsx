@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useGanttStore } from "@/lib/stores/gantt.store";
+import type { Period } from "@/lib/types/gantt";
 import { AddPeriodModal } from "./AddPeriodModal";
+import { EditPeriodModal } from "./EditPeriodModal";
 import { TaskList } from "./TaskList";
 import { Timeline } from "./Timeline";
 
@@ -14,6 +16,8 @@ const TOTAL_DAYS = 60; // 2ヶ月分
 
 export function GanttChart() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [editingPeriod, setEditingPeriod] = useState<Period | null>(null);
 	const { selectedPeriod, setSelectedPeriod } = useGanttStore();
 	const timelineScrollRef = useRef<HTMLDivElement>(null);
 	const contentScrollRef = useRef<HTMLDivElement>(null);
@@ -37,6 +41,17 @@ export function GanttChart() {
 
 	const handleModalClose = () => {
 		setIsModalOpen(false);
+		setSelectedPeriod(null);
+	};
+
+	const handlePeriodEdit = (period: Period) => {
+		setEditingPeriod(period);
+		setIsEditModalOpen(true);
+	};
+
+	const handleEditModalClose = () => {
+		setIsEditModalOpen(false);
+		setEditingPeriod(null);
 		setSelectedPeriod(null);
 	};
 
@@ -94,6 +109,7 @@ export function GanttChart() {
 					<TaskList
 						dates={dates}
 						onPeriodSelect={handlePeriodSelect}
+						onPeriodEdit={handlePeriodEdit}
 						scrollRef={contentScrollRef}
 						onScroll={handleScroll("content")}
 					/>
@@ -106,6 +122,12 @@ export function GanttChart() {
 				taskId={selectedPeriod?.taskId || ""}
 				startDate={selectedPeriod?.startDate || ""}
 				endDate={selectedPeriod?.endDate || ""}
+			/>
+
+			<EditPeriodModal
+				isOpen={isEditModalOpen}
+				onClose={handleEditModalClose}
+				period={editingPeriod}
 			/>
 		</DndProvider>
 	);

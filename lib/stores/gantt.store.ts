@@ -13,8 +13,16 @@ interface GanttStore {
 	setSelectedPeriod: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
-	updateSelectedPeriod: (startDate: string, endDate: string) => void;
+	updateSelectedPeriod: (
+		startDate: string,
+		endDate: string,
+		taskId?: string,
+	) => void;
 	addPeriod: (taskId: string, period: Omit<Period, "id">) => void;
+	updatePeriod: (
+		periodId: string,
+		updates: Partial<Omit<Period, "id">>,
+	) => void;
 	getTagById: (tagId: string) => Tag | undefined;
 }
 
@@ -25,10 +33,15 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 
 	setSelectedPeriod: (period) => set({ selectedPeriod: period }),
 
-	updateSelectedPeriod: (startDate, endDate) =>
+	updateSelectedPeriod: (startDate, endDate, taskId) =>
 		set((state) => ({
 			selectedPeriod: state.selectedPeriod
-				? { ...state.selectedPeriod, startDate, endDate }
+				? {
+						...state.selectedPeriod,
+						startDate,
+						endDate,
+						...(taskId && { taskId }),
+					}
 				: null,
 		})),
 
@@ -48,6 +61,17 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 						}
 					: task,
 			),
+		}));
+	},
+
+	updatePeriod: (periodId, updates) => {
+		set((state) => ({
+			tasks: state.tasks.map((task) => ({
+				...task,
+				periods: task.periods.map((period) =>
+					period.id === periodId ? { ...period, ...updates } : period,
+				),
+			})),
 		}));
 	},
 
