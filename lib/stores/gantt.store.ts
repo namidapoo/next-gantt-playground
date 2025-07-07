@@ -1,0 +1,50 @@
+import { create } from "zustand";
+import initialData from "@/lib/data/initial-data.json";
+import type { Period, Tag, Task } from "@/lib/types/gantt";
+
+interface GanttStore {
+	tasks: Task[];
+	tags: Tag[];
+	selectedPeriod: {
+		taskId: string;
+		startDate: string;
+		endDate: string;
+	} | null;
+	setSelectedPeriod: (
+		period: { taskId: string; startDate: string; endDate: string } | null,
+	) => void;
+	addPeriod: (taskId: string, period: Omit<Period, "id">) => void;
+	getTagById: (tagId: string) => Tag | undefined;
+}
+
+export const useGanttStore = create<GanttStore>((set, get) => ({
+	tasks: initialData.tasks as Task[],
+	tags: initialData.tags as Tag[],
+	selectedPeriod: null,
+
+	setSelectedPeriod: (period) => set({ selectedPeriod: period }),
+
+	addPeriod: (taskId, period) => {
+		set((state) => ({
+			tasks: state.tasks.map((task) =>
+				task.id === taskId
+					? {
+							...task,
+							periods: [
+								...task.periods,
+								{
+									...period,
+									id: `period-${Date.now()}`,
+								},
+							],
+						}
+					: task,
+			),
+		}));
+	},
+
+	getTagById: (tagId) => {
+		const { tags } = get();
+		return tags.find((tag) => tag.id === tagId);
+	},
+}));

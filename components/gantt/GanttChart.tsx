@@ -1,0 +1,68 @@
+"use client";
+
+import { addDays, subDays } from "date-fns";
+import { useState } from "react";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { useGanttStore } from "@/lib/stores/gantt.store";
+import { AddPeriodModal } from "./AddPeriodModal";
+import { TaskList } from "./TaskList";
+import { Timeline } from "./Timeline";
+
+const DAYS_BEFORE_TODAY = 7;
+const TOTAL_DAYS = 60; // 2ヶ月分
+
+export function GanttChart() {
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const { selectedPeriod, setSelectedPeriod } = useGanttStore();
+
+	const startDate = subDays(new Date(), DAYS_BEFORE_TODAY);
+
+	const dates: Date[] = [];
+	for (let i = 0; i < TOTAL_DAYS; i++) {
+		dates.push(addDays(startDate, i));
+	}
+
+	const handlePeriodSelect = (
+		period: { taskId: string; startDate: string; endDate: string } | null,
+	) => {
+		if (period) {
+			setSelectedPeriod(period);
+			setIsModalOpen(true);
+		}
+	};
+
+	const handleModalClose = () => {
+		setIsModalOpen(false);
+		setSelectedPeriod(null);
+	};
+
+	return (
+		<DndProvider backend={HTML5Backend}>
+			<div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+				<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200">
+					<div className="bg-gray-50 p-3 font-semibold flex items-center">
+						Tasks
+					</div>
+					<Timeline dates={dates} />
+				</div>
+
+				<div className="border-t border-gray-200">
+					<TaskList
+						dates={dates}
+						startDate={startDate}
+						onPeriodSelect={handlePeriodSelect}
+					/>
+				</div>
+			</div>
+
+			<AddPeriodModal
+				isOpen={isModalOpen}
+				onClose={handleModalClose}
+				taskId={selectedPeriod?.taskId || ""}
+				startDate={selectedPeriod?.startDate || ""}
+				endDate={selectedPeriod?.endDate || ""}
+			/>
+		</DndProvider>
+	);
+}
