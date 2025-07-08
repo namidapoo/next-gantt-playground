@@ -55,7 +55,7 @@ export function TaskList({
 							<Button
 								variant="ghost"
 								size="sm"
-								className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+								className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 cursor-pointer"
 								onClick={() => handleDeleteTask(task.id, task.name)}
 								title="Delete task"
 							>

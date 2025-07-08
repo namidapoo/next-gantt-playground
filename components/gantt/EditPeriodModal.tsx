@@ -338,7 +338,7 @@ export function EditPeriodModal({
 									variant="outline" 
 									onClick={handleDeletePeriod} 
 									type="button"
-									className="text-red-600 hover:text-red-700 hover:bg-red-50"
+									className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
 								>
 									<Trash2 className="h-4 w-4 mr-2" />
 									Delete Period

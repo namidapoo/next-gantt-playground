@@ -57,6 +57,7 @@ export function DeleteConfirmationDialog({
 						variant="destructive" 
 						onClick={handleConfirm}
 						type="button"
+						className="cursor-pointer"
 					>
 						{confirmText}
 					</Button>
