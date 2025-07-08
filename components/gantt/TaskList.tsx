@@ -76,8 +76,9 @@ export function TaskList({
 								) : (
 									<button
 										type="button"
-										className="font-medium text-sm cursor-pointer hover:bg-gray-100 px-2 py-1 rounded text-left w-full"
+										className="font-medium text-sm cursor-pointer hover:bg-gray-100 px-2 py-1 rounded text-left w-full truncate max-w-[200px]"
 										onClick={() => handleTaskClick(task.id)}
+										title={task.name}
 									>
 										{task.name}
 									</button>
