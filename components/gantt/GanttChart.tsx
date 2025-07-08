@@ -10,6 +10,8 @@ import { AddPeriodModal } from "./AddPeriodModal";
 import { EditPeriodModal } from "./EditPeriodModal";
 import { TaskList } from "./TaskList";
 import { Timeline } from "./Timeline";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 const DAYS_BEFORE_TODAY = 7;
 const TOTAL_DAYS = 60; // 2ヶ月分
@@ -18,7 +20,7 @@ export function GanttChart() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [editingPeriod, setEditingPeriod] = useState<Period | null>(null);
-	const { selectedPeriod, setSelectedPeriod } = useGanttStore();
+	const { selectedPeriod, setSelectedPeriod, addTask, setEditingTaskId } = useGanttStore();
 	const timelineScrollRef = useRef<HTMLDivElement>(null);
 	const contentScrollRef = useRef<HTMLDivElement>(null);
 	const ganttContainerRef = useRef<HTMLDivElement>(null);
@@ -53,6 +55,19 @@ export function GanttChart() {
 		setIsEditModalOpen(false);
 		setEditingPeriod(null);
 		setSelectedPeriod(null);
+	};
+
+	const handleAddTask = () => {
+		const taskId = addTask("");
+		setEditingTaskId(taskId);
+		
+		// 新しいタスクまで自動スクロール
+		setTimeout(() => {
+			const taskElement = document.getElementById(`task-${taskId}`);
+			if (taskElement) {
+				taskElement.scrollIntoView({ behavior: "smooth", block: "center" });
+			}
+		}, 100);
 	};
 
 	const handleScroll =
@@ -96,8 +111,16 @@ export function GanttChart() {
 			>
 				{/* 固定ヘッダー */}
 				<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200 border-b border-gray-200 flex-shrink-0">
-					<div className="bg-gray-50 p-3 font-semibold flex items-center">
-						Tasks
+					<div className="bg-gray-50 p-3 font-semibold flex items-center justify-between">
+						<span>Tasks</span>
+						<Button
+							onClick={handleAddTask}
+							variant="ghost"
+							size="sm"
+							className="h-6 w-6 p-0 text-gray-600 hover:text-gray-900"
+						>
+							<Plus className="h-4 w-4" />
+						</Button>
 					</div>
 					<Timeline
 						dates={dates}

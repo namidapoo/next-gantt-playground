@@ -10,6 +10,7 @@ interface GanttStore {
 		startDate: string;
 		endDate: string;
 	} | null;
+	editingTaskId: string | null;
 	setSelectedPeriod: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
@@ -24,12 +25,17 @@ interface GanttStore {
 		updates: Partial<Omit<Period, "id">>,
 	) => void;
 	getTagById: (tagId: string) => Tag | undefined;
+	addTask: (name: string) => string;
+	updateTask: (taskId: string, name: string) => void;
+	deleteTask: (taskId: string) => void;
+	setEditingTaskId: (taskId: string | null) => void;
 }
 
 export const useGanttStore = create<GanttStore>((set, get) => ({
 	tasks: initialData.tasks as Task[],
 	tags: initialData.tags as Tag[],
 	selectedPeriod: null,
+	editingTaskId: null,
 
 	setSelectedPeriod: (period) => set({ selectedPeriod: period }),
 
@@ -79,4 +85,35 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 		const { tags } = get();
 		return tags.find((tag) => tag.id === tagId);
 	},
+
+	addTask: (name) => {
+		const taskId = `task-${Date.now()}`;
+		set((state) => ({
+			tasks: [
+				...state.tasks,
+				{
+					id: taskId,
+					name,
+					periods: [],
+				},
+			],
+		}));
+		return taskId;
+	},
+
+	updateTask: (taskId, name) => {
+		set((state) => ({
+			tasks: state.tasks.map((task) =>
+				task.id === taskId ? { ...task, name } : task,
+			),
+		}));
+	},
+
+	deleteTask: (taskId) => {
+		set((state) => ({
+			tasks: state.tasks.filter((task) => task.id !== taskId),
+		}));
+	},
+
+	setEditingTaskId: (taskId) => set({ editingTaskId: taskId }),
 }));
