@@ -18,6 +18,9 @@ interface GanttStore {
 		endDate: string,
 		taskId?: string,
 	) => void;
+	addTask: (name: string) => string;
+	updateTask: (taskId: string, name: string) => void;
+	deleteTask: (taskId: string) => void;
 	addPeriod: (taskId: string, period: Omit<Period, "id">) => void;
 	updatePeriod: (
 		periodId: string,
@@ -44,6 +47,35 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 					}
 				: null,
 		})),
+
+	addTask: (name) => {
+		const taskId = `task-${Date.now()}`;
+		set((state) => ({
+			tasks: [
+				...state.tasks,
+				{
+					id: taskId,
+					name,
+					periods: [],
+				},
+			],
+		}));
+		return taskId;
+	},
+
+	updateTask: (taskId, name) => {
+		set((state) => ({
+			tasks: state.tasks.map((task) =>
+				task.id === taskId ? { ...task, name } : task,
+			),
+		}));
+	},
+
+	deleteTask: (taskId) => {
+		set((state) => ({
+			tasks: state.tasks.filter((task) => task.id !== taskId),
+		}));
+	},
 
 	addPeriod: (taskId, period) => {
 		set((state) => ({

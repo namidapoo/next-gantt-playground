@@ -1,11 +1,13 @@
 "use client";
 
 import { addDays, subDays } from "date-fns";
+import { Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
+import { Button } from "@/components/ui/button";
 import { AddPeriodModal } from "./AddPeriodModal";
 import { EditPeriodModal } from "./EditPeriodModal";
 import { TaskList } from "./TaskList";
@@ -18,10 +20,12 @@ export function GanttChart() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [editingPeriod, setEditingPeriod] = useState<Period | null>(null);
-	const { selectedPeriod, setSelectedPeriod } = useGanttStore();
+	const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+	const { selectedPeriod, setSelectedPeriod, addTask } = useGanttStore();
 	const timelineScrollRef = useRef<HTMLDivElement>(null);
 	const contentScrollRef = useRef<HTMLDivElement>(null);
 	const ganttContainerRef = useRef<HTMLDivElement>(null);
+	const taskListRef = useRef<HTMLDivElement>(null);
 
 	const startDate = subDays(new Date(), DAYS_BEFORE_TODAY);
 
@@ -53,6 +57,21 @@ export function GanttChart() {
 		setIsEditModalOpen(false);
 		setEditingPeriod(null);
 		setSelectedPeriod(null);
+	};
+
+	const handleAddTask = () => {
+		const taskId = addTask("");
+		setEditingTaskId(taskId);
+		
+		// タスクリストの最下部にスクロール
+		setTimeout(() => {
+			if (taskListRef.current) {
+				taskListRef.current.scrollTo({
+					top: taskListRef.current.scrollHeight,
+					behavior: "smooth",
+				});
+			}
+		}, 100);
 	};
 
 	const handleScroll =
@@ -96,8 +115,16 @@ export function GanttChart() {
 			>
 				{/* 固定ヘッダー */}
 				<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200 border-b border-gray-200 flex-shrink-0">
-					<div className="bg-gray-50 p-3 font-semibold flex items-center">
-						Tasks
+					<div className="bg-gray-50 p-3 font-semibold flex items-center justify-between">
+						<span>Tasks</span>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={handleAddTask}
+							className="h-6 w-6 p-0"
+						>
+							<Plus className="h-4 w-4" />
+						</Button>
 					</div>
 					<Timeline
 						dates={dates}
@@ -107,13 +134,15 @@ export function GanttChart() {
 				</div>
 
 				{/* スクロール可能なコンテンツエリア */}
-				<div className="flex-1 overflow-y-auto">
+				<div ref={taskListRef} className="flex-1 overflow-y-auto">
 					<TaskList
 						dates={dates}
 						onPeriodSelect={handlePeriodSelect}
 						onPeriodEdit={handlePeriodEdit}
 						scrollRef={contentScrollRef}
 						onScroll={handleScroll("content")}
+						editingTaskId={editingTaskId}
+						onTaskEdit={setEditingTaskId}
 					/>
 				</div>
 			</div>
