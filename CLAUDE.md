@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+- Always respond in Japanese, regardless of whether the input is in English.
+- Always resolve any type errors and linting errors displayed in the console.
+- Avoid using `any`.
+- Minimize the use of type casting with `as`.
+- Prefer non-destructive operations over destructive ones when working with arrays and objects.
+- Use `const` instead of `let` as a general rule, since `let` can lead to unnecessary reassignment.
+- Always check for VS Code diagnostic errors and do not finish your work until there are zero errors.
+- When creating a pull request, please check if there is a PR template in the repository and follow it if available.
+- Always include a prefix (such as feat, fix, refactor, etc.) in your commit messages.
+
 ## Commands
 
 ### Development
