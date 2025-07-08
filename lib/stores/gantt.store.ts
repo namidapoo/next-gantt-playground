@@ -2,6 +2,9 @@ import { create } from "zustand";
 import initialData from "@/lib/data/initial-data.json";
 import type { Period, Tag, Task } from "@/lib/types/gantt";
 
+let taskCounter = 0;
+let periodCounter = 0;
+
 interface GanttStore {
 	tasks: Task[];
 	tags: Tag[];
@@ -61,7 +64,7 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 								...task.periods,
 								{
 									...period,
-									id: `period-${crypto.randomUUID()}`,
+									id: `period-${Date.now()}-${periodCounter++}`,
 								},
 							],
 						}
@@ -87,7 +90,7 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 	},
 
 	addTask: (name) => {
-		const taskId = `task-${crypto.randomUUID()}`;
+		const taskId = `task-${Date.now()}-${taskCounter++}`;
 		const newTask: Task = {
 			id: taskId,
 			name,
