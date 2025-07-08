@@ -1,8 +1,10 @@
 "use client";
 
+import React from "react";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
 import { TaskRow } from "./TaskRow";
+import { TaskNameEditor } from "./TaskNameEditor";
 
 interface TaskListProps {
 	dates: Date[];
@@ -21,22 +23,45 @@ export function TaskList({
 	scrollRef,
 	onScroll,
 }: TaskListProps) {
-	const { tasks } = useGanttStore();
+	const { tasks, setEditingTaskId, editingTaskId } = useGanttStore();
+
+	const handleTaskClick = (taskId: string) => {
+		if (editingTaskId !== taskId) {
+			setEditingTaskId(taskId);
+		}
+	};
+
+	const handleEditFinish = () => {
+		setEditingTaskId(null);
+	};
 
 	return (
-		<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200">
-			{/* 固定のTasks列 */}
-			<div className="divide-y divide-gray-200">
-				{tasks.map((task) => (
-					<div key={`${task.id}-name`} className="p-3 h-16 flex items-center">
-						<div className="font-medium text-sm">{task.name}</div>
-					</div>
-				))}
-			</div>
+		<div ref={scrollRef} className="overflow-x-hidden" onScroll={onScroll}>
+			<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200 min-w-max">
+				{/* Tasks列 */}
+				<div className="divide-y divide-gray-200">
+					{tasks.map((task) => (
+						<div key={`${task.id}-name`} className="p-3 h-16 flex items-center">
+							{editingTaskId === task.id ? (
+								<TaskNameEditor
+									taskId={task.id}
+									initialName={task.name}
+									onFinish={handleEditFinish}
+								/>
+							) : (
+								<div
+									className="font-medium text-sm cursor-pointer hover:bg-gray-100 px-2 py-1 rounded w-full"
+									onClick={() => handleTaskClick(task.id)}
+								>
+									{task.name}
+								</div>
+							)}
+						</div>
+					))}
+				</div>
 
-			{/* スクロール可能なコンテンツ領域 */}
-			<div ref={scrollRef} className="overflow-x-hidden" onScroll={onScroll}>
-				<div className="min-w-max divide-y divide-gray-200">
+				{/* スケジュール列 */}
+				<div className="divide-y divide-gray-200">
 					{tasks.map((task) => (
 						<TaskRow
 							key={task.id}
