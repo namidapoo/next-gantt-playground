@@ -1,7 +1,7 @@
 "use client";
 
 import { addDays, subDays } from "date-fns";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useGanttStore } from "@/lib/stores/gantt.store";
@@ -57,10 +57,10 @@ export function GanttChart() {
 		setSelectedPeriod(null);
 	};
 
-	const handleAddTask = () => {
+	const handleAddTask = useCallback(() => {
 		const taskId = addTask("");
 		setEditingTaskId(taskId);
-	};
+	}, [addTask, setEditingTaskId]);
 
 	const handleScroll =
 		(source: "timeline" | "content") => (e: React.UIEvent<HTMLDivElement>) => {

@@ -11,6 +11,7 @@ interface TaskNameEditorProps {
 
 export function TaskNameEditor({ taskId, initialName, onFinish }: TaskNameEditorProps) {
 	const [name, setName] = useState(initialName);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const { updateTask, deleteTask } = useGanttStore();
 
@@ -22,6 +23,9 @@ export function TaskNameEditor({ taskId, initialName, onFinish }: TaskNameEditor
 	}, []);
 
 	const handleSubmit = () => {
+		if (isSubmitting) return;
+		setIsSubmitting(true);
+		
 		if (name.trim()) {
 			updateTask(taskId, name.trim());
 		} else {
@@ -31,6 +35,9 @@ export function TaskNameEditor({ taskId, initialName, onFinish }: TaskNameEditor
 	};
 
 	const handleCancel = () => {
+		if (isSubmitting) return;
+		setIsSubmitting(true);
+		
 		if (initialName === "") {
 			deleteTask(taskId);
 		}

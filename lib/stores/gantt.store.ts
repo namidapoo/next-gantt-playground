@@ -61,7 +61,7 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 								...task.periods,
 								{
 									...period,
-									id: `period-${Date.now()}`,
+									id: `period-${crypto.randomUUID()}`,
 								},
 							],
 						}
@@ -87,7 +87,7 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 	},
 
 	addTask: (name) => {
-		const taskId = `task-${Date.now()}`;
+		const taskId = `task-${crypto.randomUUID()}`;
 		const newTask: Task = {
 			id: taskId,
 			name,
