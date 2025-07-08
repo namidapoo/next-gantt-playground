@@ -53,8 +53,8 @@ export function DeleteConfirmationDialog({
 					<Button variant="outline" onClick={onClose} type="button">
 						{cancelText}
 					</Button>
-					<Button 
-						variant="destructive" 
+					<Button
+						variant="destructive"
 						onClick={handleConfirm}
 						type="button"
 						className="cursor-pointer"

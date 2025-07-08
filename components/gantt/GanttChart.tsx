@@ -1,9 +1,11 @@
 "use client";
 
 import { addDays, subDays } from "date-fns";
-import { useEffect, useRef, useState } from "react";
+import { Plus } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { Button } from "@/components/ui/button";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
 import { AddPeriodModal } from "./AddPeriodModal";
@@ -18,7 +20,8 @@ export function GanttChart() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [editingPeriod, setEditingPeriod] = useState<Period | null>(null);
-	const { selectedPeriod, setSelectedPeriod } = useGanttStore();
+	const { selectedPeriod, setSelectedPeriod, addTask, setEditingTaskId } =
+		useGanttStore();
 	const timelineScrollRef = useRef<HTMLDivElement>(null);
 	const contentScrollRef = useRef<HTMLDivElement>(null);
 	const ganttContainerRef = useRef<HTMLDivElement>(null);
@@ -55,6 +58,11 @@ export function GanttChart() {
 		setSelectedPeriod(null);
 	};
 
+	const handleAddTask = useCallback(() => {
+		const taskId = addTask("");
+		setEditingTaskId(taskId);
+	}, [addTask, setEditingTaskId]);
+
 	const handleScroll =
 		(source: "timeline" | "content") => (e: React.UIEvent<HTMLDivElement>) => {
 			const scrollLeft = e.currentTarget.scrollLeft;
@@ -88,6 +96,22 @@ export function GanttChart() {
 		};
 	}, []);
 
+	// キーボードショートカット
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if ((e.ctrlKey || e.metaKey) && e.key === "n") {
+				e.preventDefault();
+				handleAddTask();
+			}
+		};
+
+		document.addEventListener("keydown", handleKeyDown);
+
+		return () => {
+			document.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [handleAddTask]);
+
 	return (
 		<DndProvider backend={HTML5Backend}>
 			<div
@@ -96,8 +120,16 @@ export function GanttChart() {
 			>
 				{/* 固定ヘッダー */}
 				<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200 border-b border-gray-200 flex-shrink-0">
-					<div className="bg-gray-50 p-3 font-semibold flex items-center">
-						Tasks
+					<div className="bg-gray-50 p-3 font-semibold flex items-center justify-between">
+						<span>Tasks</span>
+						<Button
+							onClick={handleAddTask}
+							variant="outline"
+							size="sm"
+							className="h-7 w-7 p-0"
+						>
+							<Plus className="w-4 h-4" />
+						</Button>
 					</div>
 					<Timeline
 						dates={dates}

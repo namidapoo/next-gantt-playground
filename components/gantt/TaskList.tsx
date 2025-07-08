@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
+import { TaskNameEditor } from "./TaskNameEditor";
 import { TaskRow } from "./TaskRow";
 
 interface TaskListProps {
@@ -27,7 +28,8 @@ export function TaskList({
 	scrollRef,
 	onScroll,
 }: TaskListProps) {
-	const { tasks, deleteTask } = useGanttStore();
+	const { tasks, deleteTask, setEditingTaskId, editingTaskId } =
+		useGanttStore();
 	const [deleteTaskDialog, setDeleteTaskDialog] = useState<{
 		isOpen: boolean;
 		taskId: string;
@@ -44,30 +46,57 @@ export function TaskList({
 		setDeleteTaskDialog({ isOpen: false, taskId: "", taskName: "" });
 	};
 
+	const handleTaskClick = (taskId: string) => {
+		if (editingTaskId !== taskId) {
+			setEditingTaskId(taskId);
+		}
+	};
+
+	const handleEditFinish = () => {
+		setEditingTaskId(null);
+	};
+
 	return (
 		<>
-			<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200">
-				{/* 固定のTasks列 */}
-				<div className="divide-y divide-gray-200">
-					{tasks.map((task) => (
-						<div key={`${task.id}-name`} className="p-3 h-16 flex items-center justify-between group">
-							<div className="font-medium text-sm">{task.name}</div>
-							<Button
-								variant="ghost"
-								size="sm"
-								className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 cursor-pointer"
-								onClick={() => handleDeleteTask(task.id, task.name)}
-								title="Delete task"
+			<div ref={scrollRef} className="overflow-x-hidden" onScroll={onScroll}>
+				<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200 min-w-max">
+					{/* Tasks列 */}
+					<div className="divide-y divide-gray-200">
+						{tasks.map((task) => (
+							<div
+								key={`${task.id}-name`}
+								className="p-3 h-16 flex items-center justify-between group"
 							>
-								<Trash2 className="h-4 w-4" />
-							</Button>
-						</div>
-					))}
-				</div>
+								{editingTaskId === task.id ? (
+									<TaskNameEditor
+										taskId={task.id}
+										initialName={task.name}
+										onFinish={handleEditFinish}
+									/>
+								) : (
+									<button
+										type="button"
+										className="font-medium text-sm cursor-pointer hover:bg-gray-100 px-2 py-1 rounded text-left w-full"
+										onClick={() => handleTaskClick(task.id)}
+									>
+										{task.name}
+									</button>
+								)}
+								<Button
+									variant="ghost"
+									size="sm"
+									className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 cursor-pointer"
+									onClick={() => handleDeleteTask(task.id, task.name)}
+									title="Delete task"
+								>
+									<Trash2 className="h-4 w-4" />
+								</Button>
+							</div>
+						))}
+					</div>
 
-				{/* スクロール可能なコンテンツ領域 */}
-				<div ref={scrollRef} className="overflow-x-hidden" onScroll={onScroll}>
-					<div className="min-w-max divide-y divide-gray-200">
+					{/* スケジュール列 */}
+					<div className="divide-y divide-gray-200">
 						{tasks.map((task) => (
 							<TaskRow
 								key={task.id}
@@ -84,7 +113,9 @@ export function TaskList({
 
 			<DeleteConfirmationDialog
 				isOpen={deleteTaskDialog.isOpen}
-				onClose={() => setDeleteTaskDialog({ isOpen: false, taskId: "", taskName: "" })}
+				onClose={() =>
+					setDeleteTaskDialog({ isOpen: false, taskId: "", taskName: "" })
+				}
 				onConfirm={handleConfirmDeleteTask}
 				title="Delete Task"
 				description={`Are you sure you want to delete "${deleteTaskDialog.taskName}"? This action cannot be undone and will remove all associated periods.`}

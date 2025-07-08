@@ -2,6 +2,9 @@ import { create } from "zustand";
 import initialData from "@/lib/data/initial-data.json";
 import type { Period, Tag, Task } from "@/lib/types/gantt";
 
+let taskCounter = 0;
+let periodCounter = 0;
+
 interface GanttStore {
 	tasks: Task[];
 	tags: Tag[];
@@ -10,6 +13,7 @@ interface GanttStore {
 		startDate: string;
 		endDate: string;
 	} | null;
+	editingTaskId: string | null;
 	setSelectedPeriod: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
@@ -23,15 +27,19 @@ interface GanttStore {
 		periodId: string,
 		updates: Partial<Omit<Period, "id">>,
 	) => void;
-	deleteTask: (taskId: string) => void;
 	deletePeriod: (periodId: string) => void;
 	getTagById: (tagId: string) => Tag | undefined;
+	addTask: (name: string) => string;
+	updateTask: (taskId: string, name: string) => void;
+	deleteTask: (taskId: string) => void;
+	setEditingTaskId: (taskId: string | null) => void;
 }
 
 export const useGanttStore = create<GanttStore>((set, get) => ({
 	tasks: initialData.tasks as Task[],
 	tags: initialData.tags as Tag[],
 	selectedPeriod: null,
+	editingTaskId: null,
 
 	setSelectedPeriod: (period) => set({ selectedPeriod: period }),
 
@@ -57,7 +65,7 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 								...task.periods,
 								{
 									...period,
-									id: `period-${Date.now()}`,
+									id: `period-${Date.now()}-${periodCounter++}`,
 								},
 							],
 						}
@@ -77,13 +85,6 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 		}));
 	},
 
-	deleteTask: (taskId) => {
-		set((state) => ({
-			tasks: state.tasks.filter((task) => task.id !== taskId),
-			selectedPeriod: state.selectedPeriod?.taskId === taskId ? null : state.selectedPeriod,
-		}));
-	},
-
 	deletePeriod: (periodId) => {
 		set((state) => ({
 			tasks: state.tasks.map((task) => ({
@@ -97,5 +98,36 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 	getTagById: (tagId) => {
 		const { tags } = get();
 		return tags.find((tag) => tag.id === tagId);
+	},
+
+	addTask: (name) => {
+		const taskId = `task-${Date.now()}-${taskCounter++}`;
+		const newTask: Task = {
+			id: taskId,
+			name,
+			periods: [],
+		};
+		set((state) => ({
+			tasks: [...state.tasks, newTask],
+		}));
+		return taskId;
+	},
+
+	updateTask: (taskId, name) => {
+		set((state) => ({
+			tasks: state.tasks.map((task) =>
+				task.id === taskId ? { ...task, name } : task,
+			),
+		}));
+	},
+
+	deleteTask: (taskId) => {
+		set((state) => ({
+			tasks: state.tasks.filter((task) => task.id !== taskId),
+		}));
+	},
+
+	setEditingTaskId: (taskId) => {
+		set({ editingTaskId: taskId });
 	},
 }));

@@ -75,7 +75,8 @@ export function EditPeriodModal({
 	onClose,
 	period,
 }: EditPeriodModalProps) {
-	const { tags, updatePeriod, deletePeriod, tasks, updateSelectedPeriod } = useGanttStore();
+	const { tags, updatePeriod, deletePeriod, tasks, updateSelectedPeriod } =
+		useGanttStore();
 	const task = tasks.find((t) => t.periods.some((p) => p.id === period?.id));
 	const [deleteDialog, setDeleteDialog] = useState<{
 		isOpen: boolean;
@@ -151,7 +152,11 @@ export function EditPeriodModal({
 
 	const handleDeletePeriod = () => {
 		if (!period) return;
-		setDeleteDialog({ isOpen: true, periodId: period.id, periodNote: period.note });
+		setDeleteDialog({
+			isOpen: true,
+			periodId: period.id,
+			periodNote: period.note,
+		});
 	};
 
 	const handleConfirmDeletePeriod = () => {
@@ -334,9 +339,9 @@ export function EditPeriodModal({
 							</div>
 
 							<DialogFooter className="flex justify-between">
-								<Button 
-									variant="outline" 
-									onClick={handleDeletePeriod} 
+								<Button
+									variant="outline"
+									onClick={handleDeletePeriod}
 									type="button"
 									className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
 								>
@@ -357,7 +362,9 @@ export function EditPeriodModal({
 
 			<DeleteConfirmationDialog
 				isOpen={deleteDialog.isOpen}
-				onClose={() => setDeleteDialog({ isOpen: false, periodId: "", periodNote: "" })}
+				onClose={() =>
+					setDeleteDialog({ isOpen: false, periodId: "", periodNote: "" })
+				}
 				onConfirm={handleConfirmDeletePeriod}
 				title="Delete Period"
 				description={`Are you sure you want to delete the period "${deleteDialog.periodNote}"? This action cannot be undone.`}
