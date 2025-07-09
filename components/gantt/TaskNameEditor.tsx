@@ -67,7 +67,7 @@ export function TaskNameEditor({
 			onKeyDown={handleKeyDown}
 			onBlur={handleSubmit}
 			className="w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-			placeholder="タスク名を入力"
+			placeholder="Enter task name"
 		/>
 	);
 }
