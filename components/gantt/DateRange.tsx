@@ -3,6 +3,26 @@ import { useCallback, useEffect, useState } from "react";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
 
+// 定数
+const DAY_WIDTH = 40; // pixels per day
+
+// ユーティリティ関数
+const findDateIndex = (dates: Date[], targetDate: Date): number => {
+	return dates.findIndex((date) => {
+		const dateOnly = new Date(
+			date.getFullYear(),
+			date.getMonth(),
+			date.getDate(),
+		);
+		const targetOnly = new Date(
+			targetDate.getFullYear(),
+			targetDate.getMonth(),
+			targetDate.getDate(),
+		);
+		return dateOnly.getTime() === targetOnly.getTime();
+	});
+};
+
 interface DateRangeProps {
 	period: Period;
 	startOffset: number;
@@ -47,17 +67,14 @@ export function DateRange({
 			if (!isDragging || !dragType) return;
 
 			const deltaX = e.clientX - dragStartX;
-			const dayDelta = Math.round(deltaX / 40); // 40px per day
+			const dayDelta = Math.round(deltaX / DAY_WIDTH);
 
 			if (dragType === "start") {
 				// 開始日を変更（範囲チェック）
+				const maxStartOffset = startOffset + duration - 1;
 				const newStartOffset = Math.max(
 					0,
-					Math.min(
-						startOffset + dayDelta,
-						startOffset + duration - 1,
-						dates.length - 1,
-					),
+					Math.min(startOffset + dayDelta, maxStartOffset, dates.length - 1),
 				);
 				const newDuration = duration - (newStartOffset - startOffset);
 				setTempOffset(newStartOffset);
@@ -154,34 +171,10 @@ export function DateRange({
 			const newEndDate = new Date(selectedPeriod.endDate);
 
 			// 新しい開始位置を計算
-			const newStartIndex = dates.findIndex((date) => {
-				const dateOnly = new Date(
-					date.getFullYear(),
-					date.getMonth(),
-					date.getDate(),
-				);
-				const startDateOnly = new Date(
-					newStartDate.getFullYear(),
-					newStartDate.getMonth(),
-					newStartDate.getDate(),
-				);
-				return dateOnly.getTime() === startDateOnly.getTime();
-			});
+			const newStartIndex = findDateIndex(dates, newStartDate);
 
 			// 新しい期間を計算
-			const newEndIndex = dates.findIndex((date) => {
-				const dateOnly = new Date(
-					date.getFullYear(),
-					date.getMonth(),
-					date.getDate(),
-				);
-				const endDateOnly = new Date(
-					newEndDate.getFullYear(),
-					newEndDate.getMonth(),
-					newEndDate.getDate(),
-				);
-				return dateOnly.getTime() === endDateOnly.getTime();
-			});
+			const newEndIndex = findDateIndex(dates, newEndDate);
 
 			if (newStartIndex !== -1 && newEndIndex !== -1) {
 				setTempOffset(newStartIndex);
@@ -198,8 +191,8 @@ export function DateRange({
 		<div
 			className="absolute top-2 h-12 rounded shadow-sm flex items-center text-xs text-white font-medium overflow-hidden transition-all border-none"
 			style={{
-				left: `${currentStartOffset * 40}px`,
-				width: `${currentDuration * 40}px`,
+				left: `${currentStartOffset * DAY_WIDTH}px`,
+				width: `${currentDuration * DAY_WIDTH}px`,
 				backgroundColor: color,
 				opacity: isDragging ? 0.7 : 1,
 			}}
