@@ -16,6 +16,7 @@ interface TaskRowProps {
 	onPeriodEdit?: (period: Period, taskId: string) => void;
 	scrollRef?: React.RefObject<HTMLDivElement | null>;
 	isAddModalOpen?: boolean;
+	isLastRow?: boolean;
 }
 
 export function TaskRow({
@@ -25,6 +26,7 @@ export function TaskRow({
 	onPeriodEdit,
 	scrollRef,
 	isAddModalOpen,
+	isLastRow = false,
 }: TaskRowProps) {
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragStart, setDragStart] = useState<number | null>(null);
@@ -274,7 +276,8 @@ export function TaskRow({
 						<div
 							key={`${task.id}-${dateString}`}
 							className={cn(
-								"flex-shrink-0 w-10 h-full border-r border-gray-200 cursor-pointer",
+								"flex-shrink-0 w-10 h-full border-r cursor-pointer",
+								!isLastRow && "border-b border-gray-200",
 								isWeekend && !isPreview && "bg-gray-50",
 								isToday && !isPreview && "bg-orange-100",
 								isPreview ? "bg-blue-200 opacity-50" : "hover:bg-gray-100",

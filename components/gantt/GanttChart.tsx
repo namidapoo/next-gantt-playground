@@ -136,7 +136,7 @@ export function GanttChart() {
 							<Plus className="w-4 h-4" />
 						</Button>
 					</div>
-					<div className="flex-1 overflow-x-auto">
+					<div className="flex-1 overflow-x-auto border-b border-gray-200">
 						<Timeline
 							dates={dates}
 							scrollRef={timelineScrollRef}
