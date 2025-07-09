@@ -62,11 +62,11 @@ export function TaskList({
 		<>
 			<div className="flex">
 				{/* 固定されたTasks列 */}
-				<div className="w-[250px] divide-y divide-gray-200 border-r border-gray-200 flex-shrink-0">
-					{tasks.map((task) => (
+				<div className="w-[250px] border-r border-gray-200 flex-shrink-0">
+					{tasks.map((task, index) => (
 						<div
 							key={`${task.id}-name`}
-							className="p-3 h-16 flex items-center justify-between group"
+							className={`p-3 h-16 flex items-center justify-between group ${index < tasks.length - 1 ? "border-b border-gray-200" : ""}`}
 						>
 							{editingTaskId === task.id ? (
 								<TaskNameEditor
@@ -103,8 +103,8 @@ export function TaskList({
 					className="flex-1 overflow-x-auto scrollbar-hide"
 					onScroll={onScroll}
 				>
-					<div className="divide-y divide-gray-200 min-w-max">
-						{tasks.map((task) => (
+					<div className="min-w-max">
+						{tasks.map((task, index) => (
 							<TaskRow
 								key={task.id}
 								task={task}
@@ -113,6 +113,7 @@ export function TaskList({
 								onPeriodEdit={onPeriodEdit}
 								scrollRef={scrollRef}
 								isAddModalOpen={isAddModalOpen}
+								isLastRow={index === tasks.length - 1}
 							/>
 						))}
 					</div>
