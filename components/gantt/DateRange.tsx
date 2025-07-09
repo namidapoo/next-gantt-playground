@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
+import { cn } from "@/lib/utils";
 
 // 定数
 const DAY_WIDTH = 40; // pixels per day
@@ -269,7 +270,12 @@ export function DateRange({
 			aria-label={`期間: ${period.note}. 左端をドラッグして開始日を変更、右端をドラッグして終了日を変更、中央をクリックして編集`}
 		>
 			{/* 左端のドラッグエリア */}
-			<div className="absolute left-0 top-0 w-3 h-full hover:bg-black hover:bg-opacity-20 transition-colors" />
+			<div
+				className={cn(
+					"absolute left-0 top-0 w-3 h-full transition-colors",
+					!isDragging && "hover:bg-black hover:bg-opacity-20",
+				)}
+			/>
 
 			{/* 中央のコンテンツエリア */}
 			<div className="flex-1 px-3 pointer-events-none">
@@ -277,7 +283,12 @@ export function DateRange({
 			</div>
 
 			{/* 右端のドラッグエリア */}
-			<div className="absolute right-0 top-0 w-3 h-full hover:bg-black hover:bg-opacity-20 transition-colors" />
+			<div
+				className={cn(
+					"absolute right-0 top-0 w-3 h-full transition-colors",
+					!isDragging && "hover:bg-black hover:bg-opacity-20",
+				)}
+			/>
 		</button>
 	);
 }
