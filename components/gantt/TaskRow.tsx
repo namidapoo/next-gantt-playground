@@ -274,7 +274,7 @@ export function TaskRow({
 						<div
 							key={`${task.id}-${dateString}`}
 							className={cn(
-								"flex-shrink-0 w-10 h-full border-r border-gray-200 cursor-pointer",
+								"flex-shrink-0 w-10 h-full border-r border-b border-gray-200 cursor-pointer",
 								isWeekend && !isPreview && "bg-gray-50",
 								isToday && !isPreview && "bg-orange-100",
 								isPreview ? "bg-blue-200 opacity-50" : "hover:bg-gray-100",

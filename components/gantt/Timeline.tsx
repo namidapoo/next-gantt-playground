@@ -43,7 +43,7 @@ export function Timeline({ dates, scrollRef, onScroll }: TimelineProps) {
 							<div
 								key={dateString}
 								className={cn(
-									"flex-shrink-0 w-10 text-center py-2 text-xs border-r border-gray-200",
+									"flex-shrink-0 w-10 text-center py-2 text-xs border-r border-b border-gray-200",
 									isToday && "bg-orange-100 font-bold",
 									isWeekend && "bg-gray-50",
 								)}
