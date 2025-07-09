@@ -5,6 +5,7 @@ import type { Period } from "@/lib/types/gantt";
 
 // 定数
 const DAY_WIDTH = 40; // pixels per day
+const DRAG_HANDLE_WIDTH = 12; // ドラッグハンドルの幅（px）
 
 // ユーティリティ関数
 const findDateIndex = (dates: Date[], targetDate: Date): number => {
@@ -48,6 +49,9 @@ export function DateRange({
 	const [dragStartX, setDragStartX] = useState(0);
 	const [tempOffset, setTempOffset] = useState(startOffset);
 	const [tempDuration, setTempDuration] = useState(duration);
+	const [cursorStyle, setCursorStyle] = useState<"pointer" | "col-resize">(
+		"pointer",
+	);
 
 	const handleMouseDown = useCallback(
 		(e: React.MouseEvent, type: "start" | "end") => {
@@ -60,6 +64,28 @@ export function DateRange({
 			setTempDuration(duration);
 		},
 		[startOffset, duration],
+	);
+
+	const handlePeriodMouseDown = useCallback(
+		(e: React.MouseEvent) => {
+			const rect = e.currentTarget.getBoundingClientRect();
+			const relativeX = e.clientX - rect.left;
+
+			// 左端の範囲なら左端ドラッグ
+			if (relativeX <= DRAG_HANDLE_WIDTH) {
+				handleMouseDown(e, "start");
+			}
+			// 右端の範囲なら右端ドラッグ
+			else if (relativeX >= rect.width - DRAG_HANDLE_WIDTH) {
+				handleMouseDown(e, "end");
+			}
+			// 中央の範囲なら編集モーダル
+			else {
+				e.stopPropagation();
+				onEdit?.(period, taskId);
+			}
+		},
+		[handleMouseDown, onEdit, period, taskId],
 	);
 
 	const handleMouseMove = useCallback(
@@ -164,6 +190,38 @@ export function DateRange({
 	const currentDuration =
 		isDragging || isSelectedAndModified ? tempDuration : duration;
 
+	// マウスホバー時のカーソル判定（throttled）
+	const handleMouseMove_Hover = useCallback(
+		(e: React.MouseEvent) => {
+			if (isDragging) return;
+
+			const rect = e.currentTarget.getBoundingClientRect();
+			const relativeX = e.clientX - rect.left;
+
+			// カーソルスタイルを判定
+			let newCursorStyle: "pointer" | "col-resize" = "pointer";
+			if (
+				relativeX <= DRAG_HANDLE_WIDTH ||
+				relativeX >= rect.width - DRAG_HANDLE_WIDTH
+			) {
+				newCursorStyle = "col-resize";
+			}
+
+			// 状態が変更された場合のみ更新
+			if (newCursorStyle !== cursorStyle) {
+				setCursorStyle(newCursorStyle);
+			}
+		},
+		[isDragging, cursorStyle],
+	);
+
+	// マウスがPeriodを離れた時のカーソルリセット
+	const handleMouseLeave = useCallback(() => {
+		if (!isDragging) {
+			setCursorStyle("pointer");
+		}
+	}, [isDragging]);
+
 	// selectedPeriodが変更されたときにtempOffsetとtempDurationを更新
 	useEffect(() => {
 		if (isSelectedAndModified && dates.length > 0) {
@@ -188,57 +246,38 @@ export function DateRange({
 	}, [selectedPeriod, dates, startOffset, duration, isSelectedAndModified]);
 
 	return (
-		<div
-			className="absolute top-2 h-12 rounded shadow-sm flex items-center text-xs text-white font-medium overflow-hidden transition-all border-none"
+		<button
+			type="button"
+			className="absolute top-2 h-12 rounded shadow-sm flex items-center text-xs text-white font-medium overflow-hidden transition-all border-none hover:brightness-110"
 			style={{
 				left: `${currentStartOffset * DAY_WIDTH}px`,
 				width: `${currentDuration * DAY_WIDTH}px`,
 				backgroundColor: color,
 				opacity: isDragging ? 0.7 : 1,
+				cursor: cursorStyle,
 			}}
 			title={period.note}
-		>
-			{/* 左端のドラッグハンドル */}
-			<div
-				role="button"
-				tabIndex={0}
-				className="absolute left-0 top-0 w-2 h-full cursor-col-resize hover:bg-black hover:bg-opacity-20 transition-colors"
-				onMouseDown={(e) => handleMouseDown(e, "start")}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-					}
-				}}
-				title="開始日を変更"
-				aria-label="開始日を変更するハンドル"
-			/>
-
-			{/* 中央のクリック可能エリア */}
-			<button
-				type="button"
-				className="flex-1 h-full px-2 cursor-pointer hover:brightness-110 transition-all border-none bg-transparent"
-				onClick={(e) => {
-					e.stopPropagation();
+			onMouseDown={handlePeriodMouseDown}
+			onMouseMove={handleMouseMove_Hover}
+			onMouseLeave={handleMouseLeave}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
 					onEdit?.(period, taskId);
-				}}
-			>
-				<span className="truncate">{period.note}</span>
-			</button>
+				}
+			}}
+			aria-label={`期間: ${period.note}. 左端をドラッグして開始日を変更、右端をドラッグして終了日を変更、中央をクリックして編集`}
+		>
+			{/* 左端のドラッグエリア */}
+			<div className="absolute left-0 top-0 w-3 h-full hover:bg-black hover:bg-opacity-20 transition-colors" />
 
-			{/* 右端のドラッグハンドル */}
-			<div
-				role="button"
-				tabIndex={0}
-				className="absolute right-0 top-0 w-2 h-full cursor-col-resize hover:bg-black hover:bg-opacity-20 transition-colors"
-				onMouseDown={(e) => handleMouseDown(e, "end")}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-					}
-				}}
-				title="終了日を変更"
-				aria-label="終了日を変更するハンドル"
-			/>
-		</div>
+			{/* 中央のコンテンツエリア */}
+			<div className="flex-1 px-3 pointer-events-none">
+				<span className="truncate">{period.note}</span>
+			</div>
+
+			{/* 右端のドラッグエリア */}
+			<div className="absolute right-0 top-0 w-3 h-full hover:bg-black hover:bg-opacity-20 transition-colors" />
+		</button>
 	);
 }
