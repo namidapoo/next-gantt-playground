@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useGanttStore } from "@/lib/stores/gantt.store";
@@ -245,8 +245,8 @@ export function DateRange({
 	// selectedPeriodが変更されたときにtempOffsetとtempDurationを更新
 	useEffect(() => {
 		if (isSelectedAndModified && dates.length > 0) {
-			const newStartDate = new Date(selectedPeriod.startDate);
-			const newEndDate = new Date(selectedPeriod.endDate);
+			const newStartDate = parseISO(selectedPeriod.startDate);
+			const newEndDate = parseISO(selectedPeriod.endDate);
 
 			// 新しい開始位置を計算
 			const newStartIndex = findDateIndex(dates, newStartDate);

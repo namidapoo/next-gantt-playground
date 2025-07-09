@@ -1,3 +1,4 @@
+import { parseISO } from "date-fns";
 import type { Period } from "@/lib/types/gantt";
 
 /**
@@ -7,10 +8,10 @@ export function hasDateRangeOverlap(
 	range1: { startDate: string; endDate: string },
 	range2: { startDate: string; endDate: string },
 ): boolean {
-	const start1 = new Date(range1.startDate);
-	const end1 = new Date(range1.endDate);
-	const start2 = new Date(range2.startDate);
-	const end2 = new Date(range2.endDate);
+	const start1 = parseISO(range1.startDate);
+	const end1 = parseISO(range1.endDate);
+	const start2 = parseISO(range2.startDate);
+	const end2 = parseISO(range2.endDate);
 
 	// 重複の条件: range1の開始日がrange2の終了日以前 かつ range1の終了日がrange2の開始日以降
 	return start1 <= end2 && end1 >= start2;
@@ -43,11 +44,11 @@ export function isDateOccupied(
 		? existingPeriods.filter((p) => p.id !== excludeId)
 		: existingPeriods;
 
-	const targetDate = new Date(date);
+	const targetDate = parseISO(date);
 
 	return targetPeriods.some((period) => {
-		const startDate = new Date(period.startDate);
-		const endDate = new Date(period.endDate);
+		const startDate = parseISO(period.startDate);
+		const endDate = parseISO(period.endDate);
 		return targetDate >= startDate && targetDate <= endDate;
 	});
 }
@@ -66,8 +67,8 @@ export function getOccupiedDates(
 	const occupiedDates = new Set<string>();
 
 	targetPeriods.forEach((period) => {
-		const startDate = new Date(period.startDate);
-		const endDate = new Date(period.endDate);
+		const startDate = parseISO(period.startDate);
+		const endDate = parseISO(period.endDate);
 
 		// 期間内の全ての日付を追加
 		const currentDate = new Date(startDate);
