@@ -17,6 +17,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
 					"--normal-border": "var(--border)",
 				} as React.CSSProperties
 			}
+			duration={2000}
+			closeButton={true}
 			{...props}
 		/>
 	);
