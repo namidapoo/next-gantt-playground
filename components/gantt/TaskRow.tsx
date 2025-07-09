@@ -13,8 +13,9 @@ interface TaskRowProps {
 	onPeriodSelect: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
-	onPeriodEdit?: (period: Period) => void;
+	onPeriodEdit?: (period: Period, taskId: string) => void;
 	scrollRef?: React.RefObject<HTMLDivElement | null>;
+	isAddModalOpen?: boolean;
 }
 
 export function TaskRow({
@@ -23,6 +24,7 @@ export function TaskRow({
 	onPeriodSelect,
 	onPeriodEdit,
 	scrollRef,
+	isAddModalOpen,
 }: TaskRowProps) {
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragStart, setDragStart] = useState<number | null>(null);
@@ -214,15 +216,15 @@ export function TaskRow({
 	]);
 
 	const isDateInPreview = (index: number) => {
-		// ドラッグ中のプレビュー
+		// ドラッグ中のプレビュー（新規作成時のみ）
 		if (isDragging && dragStart !== null && dragEnd !== null) {
 			const start = Math.min(dragStart, dragEnd);
 			const end = Math.max(dragStart, dragEnd);
 			return index >= start && index <= end;
 		}
 
-		// モーダルで選択された期間のハイライト
-		if (selectedPeriod && selectedPeriod.taskId === task.id) {
+		// モーダルで選択された期間のハイライト（新規作成時のみ）
+		if (selectedPeriod && selectedPeriod.taskId === task.id && isAddModalOpen) {
 			const selectedStartDate = new Date(selectedPeriod.startDate);
 			const selectedEndDate = new Date(selectedPeriod.endDate);
 			const currentDate = dates[index];
@@ -320,6 +322,8 @@ export function TaskRow({
 						startOffset={startOffset}
 						duration={duration}
 						color={tag?.color || "#6B7280"}
+						dates={dates}
+						taskId={task.id}
 						onEdit={onPeriodEdit}
 					/>
 				);

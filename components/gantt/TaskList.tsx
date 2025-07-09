@@ -16,9 +16,10 @@ interface TaskListProps {
 	onPeriodSelect: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
-	onPeriodEdit?: (period: Period) => void;
+	onPeriodEdit?: (period: Period, taskId: string) => void;
 	scrollRef?: React.RefObject<HTMLDivElement | null>;
 	onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
+	isAddModalOpen?: boolean;
 }
 
 export function TaskList({
@@ -27,6 +28,7 @@ export function TaskList({
 	onPeriodEdit,
 	scrollRef,
 	onScroll,
+	isAddModalOpen,
 }: TaskListProps) {
 	const { tasks, deleteTask, setEditingTaskId, editingTaskId } =
 		useGanttStore();
@@ -58,46 +60,50 @@ export function TaskList({
 
 	return (
 		<>
-			<div ref={scrollRef} className="overflow-x-hidden" onScroll={onScroll}>
-				<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200 min-w-max">
-					{/* Tasks列 */}
-					<div className="divide-y divide-gray-200">
-						{tasks.map((task) => (
-							<div
-								key={`${task.id}-name`}
-								className="p-3 h-16 flex items-center justify-between group"
-							>
-								{editingTaskId === task.id ? (
-									<TaskNameEditor
-										taskId={task.id}
-										initialName={task.name}
-										onFinish={handleEditFinish}
-									/>
-								) : (
-									<button
-										type="button"
-										className="font-medium text-sm cursor-pointer hover:bg-gray-100 px-2 py-1 rounded text-left w-full truncate max-w-[200px]"
-										onClick={() => handleTaskClick(task.id)}
-										title={task.name}
-									>
-										{task.name}
-									</button>
-								)}
-								<Button
-									variant="ghost"
-									size="sm"
-									className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 cursor-pointer"
-									onClick={() => handleDeleteTask(task.id, task.name)}
-									title="Delete task"
+			<div className="flex">
+				{/* 固定されたTasks列 */}
+				<div className="w-[250px] divide-y divide-gray-200 border-r border-gray-200 flex-shrink-0">
+					{tasks.map((task) => (
+						<div
+							key={`${task.id}-name`}
+							className="p-3 h-16 flex items-center justify-between group"
+						>
+							{editingTaskId === task.id ? (
+								<TaskNameEditor
+									taskId={task.id}
+									initialName={task.name}
+									onFinish={handleEditFinish}
+								/>
+							) : (
+								<button
+									type="button"
+									className="font-medium text-sm cursor-pointer hover:bg-gray-100 px-2 py-1 rounded text-left w-full truncate max-w-[200px]"
+									onClick={() => handleTaskClick(task.id)}
+									title={task.name}
 								>
-									<Trash2 className="h-4 w-4" />
-								</Button>
-							</div>
-						))}
-					</div>
+									{task.name}
+								</button>
+							)}
+							<Button
+								variant="ghost"
+								size="sm"
+								className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 cursor-pointer"
+								onClick={() => handleDeleteTask(task.id, task.name)}
+								title="Delete task"
+							>
+								<Trash2 className="h-4 w-4" />
+							</Button>
+						</div>
+					))}
+				</div>
 
-					{/* スケジュール列 */}
-					<div className="divide-y divide-gray-200">
+				{/* スクロール可能なスケジュール列 */}
+				<div
+					ref={scrollRef}
+					className="flex-1 overflow-x-auto scrollbar-hide"
+					onScroll={onScroll}
+				>
+					<div className="divide-y divide-gray-200 min-w-max">
 						{tasks.map((task) => (
 							<TaskRow
 								key={task.id}
@@ -106,6 +112,7 @@ export function TaskList({
 								onPeriodSelect={onPeriodSelect}
 								onPeriodEdit={onPeriodEdit}
 								scrollRef={scrollRef}
+								isAddModalOpen={isAddModalOpen}
 							/>
 						))}
 					</div>
