@@ -249,9 +249,31 @@ export function TaskRow({
 					selectedEndDate.getDate(),
 				);
 
-				return (
+				const isInSelectedRange = (
 					currentDateOnly >= startDateOnly && currentDateOnly <= endDateOnly
 				);
+
+				// 既存のPeriodと重複している場合は、プレビューハイライトを適用しない
+				if (isInSelectedRange) {
+					const hasExistingPeriod = task.periods.some(period => {
+						const periodStart = new Date(period.startDate);
+						const periodEnd = new Date(period.endDate);
+						const periodStartOnly = new Date(
+							periodStart.getFullYear(),
+							periodStart.getMonth(),
+							periodStart.getDate(),
+						);
+						const periodEndOnly = new Date(
+							periodEnd.getFullYear(),
+							periodEnd.getMonth(),
+							periodEnd.getDate(),
+						);
+						return currentDateOnly >= periodStartOnly && currentDateOnly <= periodEndOnly;
+					});
+
+					// 既存のPeriodがない場合のみハイライト
+					return !hasExistingPeriod;
+				}
 			}
 		}
 
