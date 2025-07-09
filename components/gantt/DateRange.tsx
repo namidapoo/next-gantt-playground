@@ -2,7 +2,6 @@ import { format } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
-import { cn } from "@/lib/utils";
 
 // 定数
 const DAY_WIDTH = 40; // pixels per day
@@ -250,7 +249,7 @@ export function DateRange({
 	return (
 		<button
 			type="button"
-			className="absolute top-2 h-12 rounded shadow-sm flex items-center text-xs text-white font-medium overflow-hidden transition-all border-none hover:brightness-110"
+			className="absolute top-2 h-12 rounded shadow-sm flex items-center text-xs text-white font-medium overflow-hidden transition-all border-none"
 			style={{
 				left: `${currentStartOffset * DAY_WIDTH}px`,
 				width: `${currentDuration * DAY_WIDTH}px`,
@@ -272,10 +271,13 @@ export function DateRange({
 		>
 			{/* 左端のドラッグエリア */}
 			<div
-				className={cn(
-					"absolute left-0 top-0 w-3 h-full transition-colors",
-					!isDragging && "hover:bg-black hover:bg-opacity-20",
-				)}
+				className="absolute left-0 top-0 w-3 h-full transition-colors hover:bg-black hover:bg-opacity-30"
+				// インラインスタイルを使用：条件付きCSSクラス（cn）では正しく動作しないため
+				// pointer-events制御とホバー効果の組み合わせはインラインスタイルが確実
+				style={{
+					backgroundColor: isDragging ? "transparent" : undefined,
+					pointerEvents: isDragging ? "none" : "auto",
+				}}
 			/>
 
 			{/* 中央のコンテンツエリア */}
@@ -285,10 +287,13 @@ export function DateRange({
 
 			{/* 右端のドラッグエリア */}
 			<div
-				className={cn(
-					"absolute right-0 top-0 w-3 h-full transition-colors",
-					!isDragging && "hover:bg-black hover:bg-opacity-20",
-				)}
+				className="absolute right-0 top-0 w-3 h-full transition-colors hover:bg-black hover:bg-opacity-30"
+				// インラインスタイルを使用：条件付きCSSクラス（cn）では正しく動作しないため
+				// pointer-events制御とホバー効果の組み合わせはインラインスタイルが確実
+				style={{
+					backgroundColor: isDragging ? "transparent" : undefined,
+					pointerEvents: isDragging ? "none" : "auto",
+				}}
 			/>
 		</button>
 	);
