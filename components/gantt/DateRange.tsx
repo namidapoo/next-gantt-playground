@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
+import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
 
 interface DateRangeProps {
@@ -21,6 +22,7 @@ export function DateRange({
 	taskId,
 	onEdit,
 }: DateRangeProps) {
+	const { selectedPeriod } = useGanttStore();
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragType, setDragType] = useState<"start" | "end" | null>(null);
 	const [dragStartX, setDragStartX] = useState(0);
@@ -95,9 +97,7 @@ export function DateRange({
 			onEdit?.(updatedPeriod, taskId);
 		}
 
-		// 表示を元に戻す
-		setTempOffset(startOffset);
-		setTempDuration(duration);
+		// モーダルが開いている間は表示を維持するため、ここでは元に戻さない
 	}, [
 		isDragging,
 		dragType,
@@ -106,8 +106,6 @@ export function DateRange({
 		dates,
 		period,
 		onEdit,
-		startOffset,
-		duration,
 		taskId,
 	]);
 
@@ -136,8 +134,65 @@ export function DateRange({
 		};
 	}, [isDragging, handleGlobalMouseMove, handleGlobalMouseUp]);
 
-	const currentStartOffset = isDragging ? tempOffset : startOffset;
-	const currentDuration = isDragging ? tempDuration : duration;
+	// この期間が選択されていて、かつ日付が変更されているかチェック
+	const isSelectedAndModified =
+		selectedPeriod &&
+		selectedPeriod.taskId === taskId &&
+		(selectedPeriod.startDate !== period.startDate ||
+			selectedPeriod.endDate !== period.endDate);
+
+	// 表示用のオフセットと期間を計算
+	const currentStartOffset =
+		isDragging || isSelectedAndModified ? tempOffset : startOffset;
+	const currentDuration =
+		isDragging || isSelectedAndModified ? tempDuration : duration;
+
+	// selectedPeriodが変更されたときにtempOffsetとtempDurationを更新
+	useEffect(() => {
+		if (isSelectedAndModified && dates.length > 0) {
+			const newStartDate = new Date(selectedPeriod.startDate);
+			const newEndDate = new Date(selectedPeriod.endDate);
+
+			// 新しい開始位置を計算
+			const newStartIndex = dates.findIndex((date) => {
+				const dateOnly = new Date(
+					date.getFullYear(),
+					date.getMonth(),
+					date.getDate(),
+				);
+				const startDateOnly = new Date(
+					newStartDate.getFullYear(),
+					newStartDate.getMonth(),
+					newStartDate.getDate(),
+				);
+				return dateOnly.getTime() === startDateOnly.getTime();
+			});
+
+			// 新しい期間を計算
+			const newEndIndex = dates.findIndex((date) => {
+				const dateOnly = new Date(
+					date.getFullYear(),
+					date.getMonth(),
+					date.getDate(),
+				);
+				const endDateOnly = new Date(
+					newEndDate.getFullYear(),
+					newEndDate.getMonth(),
+					newEndDate.getDate(),
+				);
+				return dateOnly.getTime() === endDateOnly.getTime();
+			});
+
+			if (newStartIndex !== -1 && newEndIndex !== -1) {
+				setTempOffset(newStartIndex);
+				setTempDuration(newEndIndex - newStartIndex + 1);
+			}
+		} else if (!selectedPeriod) {
+			// selectedPeriodがnullになったら元に戻す
+			setTempOffset(startOffset);
+			setTempDuration(duration);
+		}
+	}, [selectedPeriod, dates, startOffset, duration, isSelectedAndModified]);
 
 	return (
 		<div
