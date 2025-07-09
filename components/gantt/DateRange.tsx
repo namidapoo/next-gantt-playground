@@ -5,6 +5,7 @@ import type { Period } from "@/lib/types/gantt";
 
 // 定数
 const DAY_WIDTH = 40; // pixels per day
+const DRAG_HANDLE_WIDTH = 12; // ドラッグハンドルの幅（px）
 
 // ユーティリティ関数
 const findDateIndex = (dates: Date[], targetDate: Date): number => {
@@ -48,6 +49,9 @@ export function DateRange({
 	const [dragStartX, setDragStartX] = useState(0);
 	const [tempOffset, setTempOffset] = useState(startOffset);
 	const [tempDuration, setTempDuration] = useState(duration);
+	const [cursorStyle, setCursorStyle] = useState<"pointer" | "col-resize">(
+		"pointer",
+	);
 
 	const handleMouseDown = useCallback(
 		(e: React.MouseEvent, type: "start" | "end") => {
@@ -66,14 +70,13 @@ export function DateRange({
 		(e: React.MouseEvent) => {
 			const rect = e.currentTarget.getBoundingClientRect();
 			const relativeX = e.clientX - rect.left;
-			const dragHandleWidth = 12; // 固定12px
 
-			// 左端12pxの範囲なら左端ドラッグ
-			if (relativeX <= dragHandleWidth) {
+			// 左端の範囲なら左端ドラッグ
+			if (relativeX <= DRAG_HANDLE_WIDTH) {
 				handleMouseDown(e, "start");
 			}
-			// 右端12pxの範囲なら右端ドラッグ
-			else if (relativeX >= rect.width - dragHandleWidth) {
+			// 右端の範囲なら右端ドラッグ
+			else if (relativeX >= rect.width - DRAG_HANDLE_WIDTH) {
 				handleMouseDown(e, "end");
 			}
 			// 中央の範囲なら編集モーダル
@@ -187,27 +190,37 @@ export function DateRange({
 	const currentDuration =
 		isDragging || isSelectedAndModified ? tempDuration : duration;
 
-	// マウスホバー時のカーソル判定
+	// マウスホバー時のカーソル判定（throttled）
 	const handleMouseMove_Hover = useCallback(
 		(e: React.MouseEvent) => {
 			if (isDragging) return;
 
 			const rect = e.currentTarget.getBoundingClientRect();
 			const relativeX = e.clientX - rect.left;
-			const dragHandleWidth = 12; // 固定12px
 
-			// カーソルスタイルを動的に変更
-			const element = e.currentTarget as HTMLElement;
-			if (relativeX <= dragHandleWidth) {
-				element.style.cursor = "col-resize";
-			} else if (relativeX >= rect.width - dragHandleWidth) {
-				element.style.cursor = "col-resize";
-			} else {
-				element.style.cursor = "pointer";
+			// カーソルスタイルを判定
+			let newCursorStyle: "pointer" | "col-resize" = "pointer";
+			if (
+				relativeX <= DRAG_HANDLE_WIDTH ||
+				relativeX >= rect.width - DRAG_HANDLE_WIDTH
+			) {
+				newCursorStyle = "col-resize";
+			}
+
+			// 状態が変更された場合のみ更新
+			if (newCursorStyle !== cursorStyle) {
+				setCursorStyle(newCursorStyle);
 			}
 		},
-		[isDragging],
+		[isDragging, cursorStyle],
 	);
+
+	// マウスがPeriodを離れた時のカーソルリセット
+	const handleMouseLeave = useCallback(() => {
+		if (!isDragging) {
+			setCursorStyle("pointer");
+		}
+	}, [isDragging]);
 
 	// selectedPeriodが変更されたときにtempOffsetとtempDurationを更新
 	useEffect(() => {
@@ -235,16 +248,18 @@ export function DateRange({
 	return (
 		<button
 			type="button"
-			className="absolute top-2 h-12 rounded shadow-sm flex items-center text-xs text-white font-medium overflow-hidden transition-all border-none hover:brightness-110 cursor-pointer"
+			className="absolute top-2 h-12 rounded shadow-sm flex items-center text-xs text-white font-medium overflow-hidden transition-all border-none hover:brightness-110"
 			style={{
 				left: `${currentStartOffset * DAY_WIDTH}px`,
 				width: `${currentDuration * DAY_WIDTH}px`,
 				backgroundColor: color,
 				opacity: isDragging ? 0.7 : 1,
+				cursor: cursorStyle,
 			}}
 			title={period.note}
 			onMouseDown={handlePeriodMouseDown}
 			onMouseMove={handleMouseMove_Hover}
+			onMouseLeave={handleMouseLeave}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
