@@ -34,7 +34,7 @@ export function Timeline({ dates, scrollRef, onScroll }: TimelineProps) {
 				</div>
 
 				<div className="flex">
-					{dates.map((date) => {
+					{dates.map((date, index) => {
 						const dateString = format(date, "yyyy-MM-dd");
 						const isToday = dateString === format(new Date(), "yyyy-MM-dd");
 						const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -44,6 +44,7 @@ export function Timeline({ dates, scrollRef, onScroll }: TimelineProps) {
 								key={dateString}
 								className={cn(
 									"flex-shrink-0 w-10 text-center py-2 text-xs border-r border-gray-200",
+									index === 0 && "border-l",
 									isToday && "bg-orange-100 font-bold",
 									isWeekend && "bg-gray-50",
 								)}
