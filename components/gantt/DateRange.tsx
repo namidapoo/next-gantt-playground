@@ -152,11 +152,31 @@ export function DateRange({
 	}, [isDragging, handleGlobalMouseMove, handleGlobalMouseUp]);
 
 	// この期間が選択されていて、かつ日付が変更されているかチェック
+	// 新規作成時に既存期間が誤って選択されることを防ぐため、
+	// 期間の日付範囲が論理的に関連していることを確認
 	const isSelectedAndModified =
 		selectedPeriod &&
 		selectedPeriod.taskId === taskId &&
 		(selectedPeriod.startDate !== period.startDate ||
-			selectedPeriod.endDate !== period.endDate);
+			selectedPeriod.endDate !== period.endDate) &&
+		// 新規作成時に既存期間が影響を受けないよう、期間の日付が近い場合のみ適用
+		(() => {
+			// 既存期間の開始日と終了日
+			const periodStart = new Date(period.startDate);
+			const periodEnd = new Date(period.endDate);
+			
+			// 選択された期間の開始日と終了日
+			const selectedStart = new Date(selectedPeriod.startDate);
+			const selectedEnd = new Date(selectedPeriod.endDate);
+			
+			// 期間が重複している、または隣接している場合のみ適用
+			// これにより、全く異なる日付範囲の新規作成時に既存期間が影響を受けることを防ぐ
+			const maxGap = 7; // 7日以内の差を許容
+			const timeDiff = Math.abs(periodStart.getTime() - selectedStart.getTime());
+			const dayDiff = timeDiff / (1000 * 60 * 60 * 24);
+			
+			return dayDiff <= maxGap;
+		})();
 
 	// 表示用のオフセットと期間を計算
 	const currentStartOffset =
