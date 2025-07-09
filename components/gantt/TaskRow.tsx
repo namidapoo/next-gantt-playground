@@ -2,9 +2,11 @@
 
 import { differenceInDays, format } from "date-fns";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period, Task } from "@/lib/types/gantt";
 import { cn } from "@/lib/utils";
+import { hasOverlap, isDateOccupied } from "@/lib/utils/period-overlap";
 import { DateRange } from "./DateRange";
 
 interface TaskRowProps {
@@ -107,26 +109,6 @@ export function TaskRow({
 		setDragEnd(index);
 	};
 
-	const handleMouseUp = () => {
-		if (isDragging && dragStart !== null && dragEnd !== null) {
-			const start = Math.min(dragStart, dragEnd);
-			const end = Math.max(dragStart, dragEnd);
-
-			const period = {
-				taskId: task.id,
-				startDate: format(dates[start], "yyyy-MM-dd"),
-				endDate: format(dates[end], "yyyy-MM-dd"),
-			};
-
-			onPeriodSelect(period);
-		}
-
-		setIsDragging(false);
-		setDragStart(null);
-		setDragEnd(null);
-		stopAutoScroll();
-	};
-
 	// マウス位置ベースのスクロール判定
 	const handleMouseMove = useCallback(
 		(index: number, event: React.MouseEvent<HTMLDivElement>) => {
@@ -166,7 +148,15 @@ export function TaskRow({
 					endDate: format(dates[end], "yyyy-MM-dd"),
 				};
 
-				onPeriodSelect(period);
+				// 重複チェック
+				if (hasOverlap(period, task.periods)) {
+					toast.error("選択した期間に既存のPeriodがあります", {
+						description: "別の期間を選択してください",
+						id: "period-overlap-error",
+					});
+				} else {
+					onPeriodSelect(period);
+				}
 			}
 
 			setIsDragging(false);
@@ -210,6 +200,7 @@ export function TaskRow({
 		dragStart,
 		dragEnd,
 		task.id,
+		task.periods,
 		dates,
 		onPeriodSelect,
 		stopAutoScroll,
@@ -217,12 +208,22 @@ export function TaskRow({
 		scrollRef,
 	]);
 
-	const isDateInPreview = (index: number) => {
+	const getDatePreviewState = (index: number) => {
 		// ドラッグ中のプレビュー（新規作成時のみ）
 		if (isDragging && dragStart !== null && dragEnd !== null) {
 			const start = Math.min(dragStart, dragEnd);
 			const end = Math.max(dragStart, dragEnd);
-			return index >= start && index <= end;
+
+			if (index >= start && index <= end) {
+				// 重複チェック
+				const dateStr = format(dates[index], "yyyy-MM-dd");
+				const isOccupied = isDateOccupied(dateStr, task.periods);
+
+				return {
+					isPreview: true,
+					isOverlapped: isOccupied,
+				};
+			}
 		}
 
 		// モーダルで選択された期間のハイライト（新規作成時のみ）
@@ -249,20 +250,28 @@ export function TaskRow({
 					selectedEndDate.getDate(),
 				);
 
-				return (
-					currentDateOnly >= startDateOnly && currentDateOnly <= endDateOnly
-				);
+				if (
+					currentDateOnly >= startDateOnly &&
+					currentDateOnly <= endDateOnly
+				) {
+					return {
+						isPreview: true,
+						isOverlapped: false,
+					};
+				}
 			}
 		}
 
-		return false;
+		return {
+			isPreview: false,
+			isOverlapped: false,
+		};
 	};
 
 	return (
 		<section
 			ref={gridRef}
 			className="relative h-16 select-none min-w-max"
-			onMouseUp={handleMouseUp}
 			aria-label="Period selection grid"
 		>
 			<div className="absolute inset-0 flex">
@@ -270,7 +279,7 @@ export function TaskRow({
 					const dateString = format(date, "yyyy-MM-dd");
 					const isToday = dateString === format(new Date(), "yyyy-MM-dd");
 					const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-					const isPreview = isDateInPreview(index);
+					const previewState = getDatePreviewState(index);
 
 					return (
 						<div
@@ -278,24 +287,39 @@ export function TaskRow({
 							className={cn(
 								"flex-shrink-0 w-10 h-full border-r cursor-pointer",
 								!isLastRow && "border-b border-gray-200",
-								isWeekend && !isPreview && "bg-gray-50",
-								isToday && !isPreview && "bg-orange-100",
-								isPreview ? "bg-blue-200 opacity-50" : "hover:bg-gray-100",
+								isWeekend && !previewState.isPreview && "bg-gray-50",
+								isToday && !previewState.isPreview && "bg-orange-100",
+								previewState.isPreview &&
+									previewState.isOverlapped &&
+									"bg-red-300 opacity-70",
+								previewState.isPreview &&
+									!previewState.isOverlapped &&
+									"bg-blue-200 opacity-50",
+								!previewState.isPreview && "hover:bg-gray-100",
 							)}
 							role="button"
 							tabIndex={0}
 							aria-label={`Select ${dateString}`}
 							onMouseDown={() => handleMouseDown(index)}
 							onMouseEnter={(e) => handleMouseMove(index, e)}
-							onMouseUp={handleMouseUp}
 							onKeyDown={(e) => {
 								if (e.key === "Enter" || e.key === " ") {
-									const period = {
-										taskId: task.id,
-										startDate: format(dates[index], "yyyy-MM-dd"),
-										endDate: format(dates[index], "yyyy-MM-dd"),
-									};
-									onPeriodSelect(period);
+									const dateStr = format(dates[index], "yyyy-MM-dd");
+
+									// 重複チェック
+									if (isDateOccupied(dateStr, task.periods)) {
+										toast.error("この日付には既にPeriodが存在します", {
+											description: "別の日付を選択してください",
+											id: "date-occupied-error",
+										});
+									} else {
+										const period = {
+											taskId: task.id,
+											startDate: dateStr,
+											endDate: dateStr,
+										};
+										onPeriodSelect(period);
+									}
 								}
 							}}
 						/>
@@ -327,6 +351,7 @@ export function TaskRow({
 						color={tag?.color || "#6B7280"}
 						dates={dates}
 						taskId={task.id}
+						existingPeriods={task.periods}
 						onEdit={onPeriodEdit}
 					/>
 				);

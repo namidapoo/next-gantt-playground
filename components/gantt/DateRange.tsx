@@ -1,7 +1,9 @@
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
+import { hasOverlap } from "@/lib/utils/period-overlap";
 
 // 定数
 const DAY_WIDTH = 40; // pixels per day
@@ -31,6 +33,7 @@ interface DateRangeProps {
 	color: string;
 	dates: Date[];
 	taskId: string;
+	existingPeriods: Period[];
 	onEdit?: (period: Period, taskId: string) => void;
 }
 
@@ -41,6 +44,7 @@ export function DateRange({
 	color,
 	dates,
 	taskId,
+	existingPeriods,
 	onEdit,
 }: DateRangeProps) {
 	const { selectedPeriod } = useGanttStore();
@@ -129,12 +133,24 @@ export function DateRange({
 		const newEndDate = dates[tempOffset + tempDuration - 1];
 
 		if (newStartDate && newEndDate) {
-			// 既存期間データに更新された日付を含めて編集モーダルを開く
 			const updatedPeriod = {
 				...period,
 				startDate: format(newStartDate, "yyyy-MM-dd"),
 				endDate: format(newEndDate, "yyyy-MM-dd"),
 			};
+
+			// 重複チェック（現在編集中のPeriodは除外）
+			if (hasOverlap(updatedPeriod, existingPeriods, period.id)) {
+				toast.error("選択した期間に既存のPeriodがあります", {
+					description: "別の期間を選択してください",
+					id: "period-edit-overlap-error",
+				});
+
+				// 元の位置に戻す
+				setTempOffset(startOffset);
+				setTempDuration(duration);
+				return;
+			}
 
 			// 編集のコールバックを呼び出してEditPeriodModalを開く
 			onEdit?.(updatedPeriod, taskId);
@@ -148,6 +164,9 @@ export function DateRange({
 		tempDuration,
 		dates,
 		period,
+		existingPeriods,
+		startOffset,
+		duration,
 		onEdit,
 		taskId,
 	]);
@@ -226,8 +245,8 @@ export function DateRange({
 	// selectedPeriodが変更されたときにtempOffsetとtempDurationを更新
 	useEffect(() => {
 		if (isSelectedAndModified && dates.length > 0) {
-			const newStartDate = new Date(selectedPeriod.startDate);
-			const newEndDate = new Date(selectedPeriod.endDate);
+			const newStartDate = parseISO(selectedPeriod.startDate);
+			const newEndDate = parseISO(selectedPeriod.endDate);
 
 			// 新しい開始位置を計算
 			const newStartIndex = findDateIndex(dates, newStartDate);
