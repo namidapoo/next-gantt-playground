@@ -124,8 +124,8 @@ export function GanttChart() {
 				className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full"
 			>
 				{/* 固定ヘッダー */}
-				<div className="grid grid-cols-[250px_1fr] divide-x divide-gray-200 border-b border-gray-200 flex-shrink-0">
-					<div className="bg-gray-50 p-3 font-semibold flex items-center justify-between">
+				<div className="flex border-b border-gray-200 flex-shrink-0">
+					<div className="w-[250px] bg-gray-50 p-3 font-semibold flex items-center justify-between border-r border-gray-200 flex-shrink-0">
 						<span>Tasks</span>
 						<Button
 							onClick={handleAddTask}
@@ -136,11 +136,13 @@ export function GanttChart() {
 							<Plus className="w-4 h-4" />
 						</Button>
 					</div>
-					<Timeline
-						dates={dates}
-						scrollRef={timelineScrollRef}
-						onScroll={handleScroll("timeline")}
-					/>
+					<div className="flex-1 overflow-x-auto">
+						<Timeline
+							dates={dates}
+							scrollRef={timelineScrollRef}
+							onScroll={handleScroll("timeline")}
+						/>
+					</div>
 				</div>
 
 				{/* スクロール可能なコンテンツエリア */}
