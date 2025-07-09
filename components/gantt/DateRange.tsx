@@ -182,6 +182,7 @@ export function DateRange({
 	const isSelectedAndModified =
 		selectedPeriod &&
 		selectedPeriod.taskId === taskId &&
+		selectedPeriod.periodId === period.id &&
 		(selectedPeriod.startDate !== period.startDate ||
 			selectedPeriod.endDate !== period.endDate);
 

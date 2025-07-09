@@ -12,10 +12,16 @@ interface GanttStore {
 		taskId: string;
 		startDate: string;
 		endDate: string;
+		periodId?: string; // 編集時のみ設定、新規作成時はundefined
 	} | null;
 	editingTaskId: string | null;
 	setSelectedPeriod: (
-		period: { taskId: string; startDate: string; endDate: string } | null,
+		period: {
+			taskId: string;
+			startDate: string;
+			endDate: string;
+			periodId?: string;
+		} | null,
 	) => void;
 	updateSelectedPeriod: (
 		startDate: string,
