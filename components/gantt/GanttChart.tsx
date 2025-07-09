@@ -49,6 +49,11 @@ export function GanttChart() {
 
 	const handlePeriodEdit = (period: Period) => {
 		setEditingPeriod(period);
+		setSelectedPeriod({
+			taskId: period.taskId,
+			startDate: period.startDate,
+			endDate: period.endDate,
+		});
 		setIsEditModalOpen(true);
 	};
 
