@@ -53,6 +53,7 @@ export function GanttChart() {
 			taskId,
 			startDate: period.startDate,
 			endDate: period.endDate,
+			periodId: period.id,
 		});
 		setIsEditModalOpen(true);
 	};
