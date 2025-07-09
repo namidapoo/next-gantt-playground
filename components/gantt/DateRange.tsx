@@ -62,6 +62,29 @@ export function DateRange({
 		[startOffset, duration],
 	);
 
+	const handlePeriodMouseDown = useCallback(
+		(e: React.MouseEvent) => {
+			const rect = e.currentTarget.getBoundingClientRect();
+			const relativeX = e.clientX - rect.left;
+			const dragHandleWidth = 12; // 固定12px
+
+			// 左端12pxの範囲なら左端ドラッグ
+			if (relativeX <= dragHandleWidth) {
+				handleMouseDown(e, "start");
+			}
+			// 右端12pxの範囲なら右端ドラッグ
+			else if (relativeX >= rect.width - dragHandleWidth) {
+				handleMouseDown(e, "end");
+			}
+			// 中央の範囲なら編集モーダル
+			else {
+				e.stopPropagation();
+				onEdit?.(period, taskId);
+			}
+		},
+		[handleMouseDown, onEdit, period, taskId],
+	);
+
 	const handleMouseMove = useCallback(
 		(e: MouseEvent) => {
 			if (!isDragging || !dragType) return;
@@ -164,6 +187,28 @@ export function DateRange({
 	const currentDuration =
 		isDragging || isSelectedAndModified ? tempDuration : duration;
 
+	// マウスホバー時のカーソル判定
+	const handleMouseMove_Hover = useCallback(
+		(e: React.MouseEvent) => {
+			if (isDragging) return;
+
+			const rect = e.currentTarget.getBoundingClientRect();
+			const relativeX = e.clientX - rect.left;
+			const dragHandleWidth = 12; // 固定12px
+
+			// カーソルスタイルを動的に変更
+			const element = e.currentTarget as HTMLElement;
+			if (relativeX <= dragHandleWidth) {
+				element.style.cursor = "col-resize";
+			} else if (relativeX >= rect.width - dragHandleWidth) {
+				element.style.cursor = "col-resize";
+			} else {
+				element.style.cursor = "pointer";
+			}
+		},
+		[isDragging],
+	);
+
 	// selectedPeriodが変更されたときにtempOffsetとtempDurationを更新
 	useEffect(() => {
 		if (isSelectedAndModified && dates.length > 0) {
@@ -188,8 +233,9 @@ export function DateRange({
 	}, [selectedPeriod, dates, startOffset, duration, isSelectedAndModified]);
 
 	return (
-		<div
-			className="absolute top-2 h-12 rounded shadow-sm flex items-center text-xs text-white font-medium overflow-hidden transition-all border-none"
+		<button
+			type="button"
+			className="absolute top-2 h-12 rounded shadow-sm flex items-center text-xs text-white font-medium overflow-hidden transition-all border-none hover:brightness-110 cursor-pointer"
 			style={{
 				left: `${currentStartOffset * DAY_WIDTH}px`,
 				width: `${currentDuration * DAY_WIDTH}px`,
@@ -197,48 +243,26 @@ export function DateRange({
 				opacity: isDragging ? 0.7 : 1,
 			}}
 			title={period.note}
-		>
-			{/* 左端のドラッグハンドル */}
-			<div
-				role="button"
-				tabIndex={0}
-				className="absolute left-0 top-0 w-2 h-full cursor-col-resize hover:bg-black hover:bg-opacity-20 transition-colors"
-				onMouseDown={(e) => handleMouseDown(e, "start")}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-					}
-				}}
-				title="開始日を変更"
-				aria-label="開始日を変更するハンドル"
-			/>
-
-			{/* 中央のクリック可能エリア */}
-			<button
-				type="button"
-				className="flex-1 h-full px-2 cursor-pointer hover:brightness-110 transition-all border-none bg-transparent"
-				onClick={(e) => {
-					e.stopPropagation();
+			onMouseDown={handlePeriodMouseDown}
+			onMouseMove={handleMouseMove_Hover}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
 					onEdit?.(period, taskId);
-				}}
-			>
-				<span className="truncate">{period.note}</span>
-			</button>
+				}
+			}}
+			aria-label={`期間: ${period.note}. 左端をドラッグして開始日を変更、右端をドラッグして終了日を変更、中央をクリックして編集`}
+		>
+			{/* 左端のドラッグエリア */}
+			<div className="absolute left-0 top-0 w-3 h-full hover:bg-black hover:bg-opacity-20 transition-colors" />
 
-			{/* 右端のドラッグハンドル */}
-			<div
-				role="button"
-				tabIndex={0}
-				className="absolute right-0 top-0 w-2 h-full cursor-col-resize hover:bg-black hover:bg-opacity-20 transition-colors"
-				onMouseDown={(e) => handleMouseDown(e, "end")}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-					}
-				}}
-				title="終了日を変更"
-				aria-label="終了日を変更するハンドル"
-			/>
-		</div>
+			{/* 中央のコンテンツエリア */}
+			<div className="flex-1 px-3 pointer-events-none">
+				<span className="truncate">{period.note}</span>
+			</div>
+
+			{/* 右端のドラッグエリア */}
+			<div className="absolute right-0 top-0 w-3 h-full hover:bg-black hover:bg-opacity-20 transition-colors" />
+		</button>
 	);
 }
