@@ -143,6 +143,7 @@ export function DateRange({
 			if (hasOverlap(updatedPeriod, existingPeriods, period.id)) {
 				toast.error("選択した期間に既存のPeriodがあります", {
 					description: "別の期間を選択してください",
+					id: "period-edit-overlap-error",
 				});
 
 				// 元の位置に戻す

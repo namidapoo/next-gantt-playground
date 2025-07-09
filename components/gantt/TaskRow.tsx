@@ -152,6 +152,7 @@ export function TaskRow({
 				if (hasOverlap(period, task.periods)) {
 					toast.error("選択した期間に既存のPeriodがあります", {
 						description: "別の期間を選択してください",
+						id: "period-overlap-error",
 					});
 				} else {
 					onPeriodSelect(period);
@@ -309,6 +310,7 @@ export function TaskRow({
 									if (isDateOccupied(dateStr, task.periods)) {
 										toast.error("この日付には既にPeriodが存在します", {
 											description: "別の日付を選択してください",
+											id: "date-occupied-error",
 										});
 									} else {
 										const period = {
