@@ -320,7 +320,10 @@ export function TaskRow({
 						startOffset={startOffset}
 						duration={duration}
 						color={tag?.color || "#6B7280"}
+						dates={dates}
+						taskId={task.id}
 						onEdit={onPeriodEdit}
+						onDateChange={onPeriodSelect}
 					/>
 				);
 			})}
