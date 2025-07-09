@@ -10,7 +10,6 @@ interface DateRangeProps {
 	dates: Date[];
 	taskId: string;
 	onEdit?: (period: Period) => void;
-	onDateChange?: (period: { taskId: string; startDate: string; endDate: string }) => void;
 }
 
 export function DateRange({
@@ -21,7 +20,6 @@ export function DateRange({
 	dates,
 	taskId,
 	onEdit,
-	onDateChange,
 }: DateRangeProps) {
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragType, setDragType] = useState<'start' | 'end' | null>(null);
@@ -70,20 +68,21 @@ export function DateRange({
 		const newEndDate = dates[tempOffset + tempDuration - 1];
 
 		if (newStartDate && newEndDate) {
-			const newPeriod = {
-				taskId: taskId,
+			// 既存期間データに更新された日付を含めて編集モーダルを開く
+			const updatedPeriod = {
+				...period,
 				startDate: format(newStartDate, 'yyyy-MM-dd'),
 				endDate: format(newEndDate, 'yyyy-MM-dd'),
 			};
 
-			// 日付変更のコールバックを呼び出してモーダルを開く
-			onDateChange?.(newPeriod);
+			// 編集のコールバックを呼び出してEditPeriodModalを開く
+			onEdit?.(updatedPeriod);
 		}
 
 		// 表示を元に戻す
 		setTempOffset(startOffset);
 		setTempDuration(duration);
-	}, [isDragging, dragType, tempOffset, tempDuration, dates, period.id, onDateChange, startOffset, duration]);
+	}, [isDragging, dragType, tempOffset, tempDuration, dates, period, onEdit, startOffset, duration]);
 
 	// グローバルマウスイベントリスナー
 	const handleGlobalMouseMove = useCallback((e: MouseEvent) => {

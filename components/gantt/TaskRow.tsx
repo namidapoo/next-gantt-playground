@@ -323,7 +323,6 @@ export function TaskRow({
 						dates={dates}
 						taskId={task.id}
 						onEdit={onPeriodEdit}
-						onDateChange={onPeriodSelect}
 					/>
 				);
 			})}
