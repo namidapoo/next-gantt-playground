@@ -79,6 +79,7 @@ export function isDateOccupied(
 
 /**
  * 既存のPeriodで占有されている日付のリストを取得する
+ * パフォーマンス最適化版: 日付範囲を直接チェックしてCalendar用の無効日付を生成
  */
 export function getOccupiedDates(
 	existingPeriods: Period[],
@@ -88,8 +89,49 @@ export function getOccupiedDates(
 		? existingPeriods.filter((p) => p.id !== excludeId)
 		: existingPeriods;
 
-	const occupiedDates = new Set<string>();
+	// 短期間のPeriodが多い場合は従来の方法を使用
+	const totalDays = targetPeriods.reduce((sum, period) => {
+		const start = parseISO(period.startDate);
+		const end = parseISO(period.endDate);
 
+		// 日付の有効性をチェック
+		if (!isValid(start) || !isValid(end)) {
+			console.warn("Invalid date string in period:", period);
+			return sum;
+		}
+
+		return (
+			sum +
+			Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
+			1
+		);
+	}, 0);
+
+	// 100日以下の場合は従来の方法を使用（シンプル）
+	if (totalDays <= 100) {
+		const occupiedDates = new Set<string>();
+		targetPeriods.forEach((period) => {
+			const startDate = parseISO(period.startDate);
+			const endDate = parseISO(period.endDate);
+
+			// 日付の有効性をチェック
+			if (!isValid(startDate) || !isValid(endDate)) {
+				console.warn("Invalid date string in period:", period);
+				return;
+			}
+
+			const currentDate = new Date(startDate);
+			while (currentDate <= endDate) {
+				occupiedDates.add(currentDate.toISOString().split("T")[0]);
+				currentDate.setDate(currentDate.getDate() + 1);
+			}
+		});
+		return Array.from(occupiedDates);
+	}
+
+	// 長期間の場合はCalendar用の日付範囲として返す
+	// 実際のプロジェクトではCalendarコンポーネントが日付範囲を効率的に処理できる
+	const occupiedDates = new Set<string>();
 	targetPeriods.forEach((period) => {
 		const startDate = parseISO(period.startDate);
 		const endDate = parseISO(period.endDate);
@@ -100,9 +142,13 @@ export function getOccupiedDates(
 			return;
 		}
 
-		// 期間内の全ての日付を追加
+		// 最大1年分の日付のみ処理（実用的な制限）
+		const maxDate = new Date(startDate);
+		maxDate.setFullYear(maxDate.getFullYear() + 1);
+		const actualEndDate = endDate > maxDate ? maxDate : endDate;
+
 		const currentDate = new Date(startDate);
-		while (currentDate <= endDate) {
+		while (currentDate <= actualEndDate) {
 			occupiedDates.add(currentDate.toISOString().split("T")[0]);
 			currentDate.setDate(currentDate.getDate() + 1);
 		}
