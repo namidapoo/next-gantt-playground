@@ -77,8 +77,10 @@ export function AddPeriodModal({
 	startDate,
 	endDate,
 }: AddPeriodModalProps) {
-	const { tags, addPeriod, tasks, updateSelectedPeriod } = useGanttStore();
+	const { tags, addPeriod, tasks, updateSelectedPeriod, getDisabledDates } =
+		useGanttStore();
 	const task = tasks.find((t) => t.id === taskId);
+	const disabledDates = getDisabledDates(taskId);
 
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
@@ -197,6 +199,9 @@ export function AddPeriodModal({
 															);
 														}}
 														captionLayout="dropdown"
+														disabled={disabledDates.map(
+															(dateStr) => new Date(dateStr),
+														)}
 													/>
 												</PopoverContent>
 											</Popover>
@@ -246,6 +251,9 @@ export function AddPeriodModal({
 															);
 														}}
 														captionLayout="dropdown"
+														disabled={disabledDates.map(
+															(dateStr) => new Date(dateStr),
+														)}
 													/>
 												</PopoverContent>
 											</Popover>

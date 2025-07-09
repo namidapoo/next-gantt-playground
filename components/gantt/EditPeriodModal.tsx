@@ -75,9 +75,16 @@ export function EditPeriodModal({
 	onClose,
 	period,
 }: EditPeriodModalProps) {
-	const { tags, updatePeriod, deletePeriod, tasks, updateSelectedPeriod } =
-		useGanttStore();
+	const {
+		tags,
+		updatePeriod,
+		deletePeriod,
+		tasks,
+		updateSelectedPeriod,
+		getDisabledDates,
+	} = useGanttStore();
 	const task = tasks.find((t) => t.periods.some((p) => p.id === period?.id));
+	const disabledDates = task ? getDisabledDates(task.id, period?.id) : [];
 	const [deleteDialog, setDeleteDialog] = useState<{
 		isOpen: boolean;
 		periodId: string;
@@ -222,6 +229,9 @@ export function EditPeriodModal({
 																);
 															}}
 															captionLayout="dropdown"
+															disabled={disabledDates.map(
+																(dateStr) => new Date(dateStr),
+															)}
 														/>
 													</PopoverContent>
 												</Popover>
@@ -271,6 +281,9 @@ export function EditPeriodModal({
 																);
 															}}
 															captionLayout="dropdown"
+															disabled={disabledDates.map(
+																(dateStr) => new Date(dateStr),
+															)}
 														/>
 													</PopoverContent>
 												</Popover>

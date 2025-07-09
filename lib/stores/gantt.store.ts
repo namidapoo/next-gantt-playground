@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import initialData from "@/lib/data/initial-data.json";
 import type { Period, Tag, Task } from "@/lib/types/gantt";
+import { getOccupiedDates } from "@/lib/utils/period-overlap";
 
 let taskCounter = 0;
 let periodCounter = 0;
@@ -42,6 +43,8 @@ interface GanttStore {
 	updateTask: (taskId: string, name: string) => void;
 	deleteTask: (taskId: string) => void;
 	setEditingTaskId: (taskId: string | null) => void;
+	// Calendar用のdisabled dates機能
+	getDisabledDates: (taskId: string, excludeId?: string) => string[];
 }
 
 export const useGanttStore = create<GanttStore>((set, get) => ({
@@ -138,5 +141,14 @@ export const useGanttStore = create<GanttStore>((set, get) => ({
 
 	setEditingTaskId: (taskId) => {
 		set({ editingTaskId: taskId });
+	},
+
+	// Calendar用のdisabled dates機能の実装
+	getDisabledDates: (taskId, excludeId) => {
+		const { tasks } = get();
+		const task = tasks.find((t) => t.id === taskId);
+		if (!task) return [];
+
+		return getOccupiedDates(task.periods, excludeId);
 	},
 }));
