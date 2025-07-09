@@ -109,33 +109,6 @@ export function TaskRow({
 		setDragEnd(index);
 	};
 
-	const handleMouseUp = () => {
-		if (isDragging && dragStart !== null && dragEnd !== null) {
-			const start = Math.min(dragStart, dragEnd);
-			const end = Math.max(dragStart, dragEnd);
-
-			const period = {
-				taskId: task.id,
-				startDate: format(dates[start], "yyyy-MM-dd"),
-				endDate: format(dates[end], "yyyy-MM-dd"),
-			};
-
-			// 重複チェック
-			if (hasOverlap(period, task.periods)) {
-				toast.error("選択した期間に既存のPeriodがあります", {
-					description: "別の期間を選択してください",
-				});
-			} else {
-				onPeriodSelect(period);
-			}
-		}
-
-		setIsDragging(false);
-		setDragStart(null);
-		setDragEnd(null);
-		stopAutoScroll();
-	};
-
 	// マウス位置ベースのスクロール判定
 	const handleMouseMove = useCallback(
 		(index: number, event: React.MouseEvent<HTMLDivElement>) => {
@@ -298,7 +271,6 @@ export function TaskRow({
 		<section
 			ref={gridRef}
 			className="relative h-16 select-none min-w-max"
-			onMouseUp={handleMouseUp}
 			aria-label="Period selection grid"
 		>
 			<div className="absolute inset-0 flex">
@@ -329,7 +301,6 @@ export function TaskRow({
 							aria-label={`Select ${dateString}`}
 							onMouseDown={() => handleMouseDown(index)}
 							onMouseEnter={(e) => handleMouseMove(index, e)}
-							onMouseUp={handleMouseUp}
 							onKeyDown={(e) => {
 								if (e.key === "Enter" || e.key === " ") {
 									const dateStr = format(dates[index], "yyyy-MM-dd");
