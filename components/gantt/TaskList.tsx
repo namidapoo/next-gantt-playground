@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
+import { cn } from "@/lib/utils";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { TaskNameEditor } from "./TaskNameEditor";
 import { TaskRow } from "./TaskRow";
@@ -63,38 +64,45 @@ export function TaskList({
 			<div className="flex">
 				{/* 固定されたTasks列 */}
 				<div className="w-[250px] border-r border-gray-200 flex-shrink-0">
-					{tasks.map((task, index) => (
-						<div
-							key={`${task.id}-name`}
-							className={`p-3 h-16 flex items-center justify-between group ${index < tasks.length - 1 ? "border-b border-gray-200" : ""}`}
-						>
-							{editingTaskId === task.id ? (
-								<TaskNameEditor
-									taskId={task.id}
-									initialName={task.name}
-									onFinish={handleEditFinish}
-								/>
-							) : (
-								<button
-									type="button"
-									className="font-medium text-sm cursor-pointer hover:bg-gray-100 px-2 py-1 rounded text-left w-full truncate max-w-[200px]"
-									onClick={() => handleTaskClick(task.id)}
-									title={task.name}
-								>
-									{task.name}
-								</button>
-							)}
-							<Button
-								variant="ghost"
-								size="sm"
-								className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 cursor-pointer"
-								onClick={() => handleDeleteTask(task.id, task.name)}
-								title="Delete task"
+					{tasks.map((task, index) => {
+						const isNotLastItem = index < tasks.length - 1;
+
+						return (
+							<div
+								key={`${task.id}-name`}
+								className={cn(
+									"p-3 h-16 flex items-center justify-between group",
+									isNotLastItem && "border-b border-gray-200",
+								)}
 							>
-								<Trash2 className="h-4 w-4" />
-							</Button>
-						</div>
-					))}
+								{editingTaskId === task.id ? (
+									<TaskNameEditor
+										taskId={task.id}
+										initialName={task.name}
+										onFinish={handleEditFinish}
+									/>
+								) : (
+									<button
+										type="button"
+										className="font-medium text-sm cursor-pointer hover:bg-gray-100 px-2 py-1 rounded text-left w-full truncate max-w-[200px]"
+										onClick={() => handleTaskClick(task.id)}
+										title={task.name}
+									>
+										{task.name}
+									</button>
+								)}
+								<Button
+									variant="ghost"
+									size="sm"
+									className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 cursor-pointer"
+									onClick={() => handleDeleteTask(task.id, task.name)}
+									title="Delete task"
+								>
+									<Trash2 className="h-4 w-4" />
+								</Button>
+							</div>
+						);
+					})}
 				</div>
 
 				{/* スクロール可能なスケジュール列 */}
@@ -104,18 +112,22 @@ export function TaskList({
 					onScroll={onScroll}
 				>
 					<div className="min-w-max">
-						{tasks.map((task, index) => (
-							<TaskRow
-								key={task.id}
-								task={task}
-								dates={dates}
-								onPeriodSelect={onPeriodSelect}
-								onPeriodEdit={onPeriodEdit}
-								scrollRef={scrollRef}
-								isAddModalOpen={isAddModalOpen}
-								isLastRow={index === tasks.length - 1}
-							/>
-						))}
+						{tasks.map((task, index) => {
+							const isLastRow = index === tasks.length - 1;
+
+							return (
+								<TaskRow
+									key={task.id}
+									task={task}
+									dates={dates}
+									onPeriodSelect={onPeriodSelect}
+									onPeriodEdit={onPeriodEdit}
+									scrollRef={scrollRef}
+									isAddModalOpen={isAddModalOpen}
+									isLastRow={isLastRow}
+								/>
+							);
+						})}
 					</div>
 				</div>
 			</div>
