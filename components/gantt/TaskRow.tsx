@@ -6,6 +6,7 @@ import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period, Task } from "@/lib/types/gantt";
 import { cn } from "@/lib/utils";
 import { DateRange } from "./DateRange";
+import { PreviewPeriod } from "./PreviewPeriod";
 
 interface TaskRowProps {
 	task: Task;
@@ -15,6 +16,7 @@ interface TaskRowProps {
 	) => void;
 	onPeriodEdit?: (period: Period, taskId: string) => void;
 	scrollRef?: React.RefObject<HTMLDivElement | null>;
+	isAddModalOpen?: boolean;
 }
 
 export function TaskRow({
@@ -23,6 +25,7 @@ export function TaskRow({
 	onPeriodSelect,
 	onPeriodEdit,
 	scrollRef,
+	isAddModalOpen,
 }: TaskRowProps) {
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragStart, setDragStart] = useState<number | null>(null);
@@ -213,44 +216,8 @@ export function TaskRow({
 		scrollRef,
 	]);
 
-	const isDateInPreview = (index: number) => {
-		// ドラッグ中のプレビュー
-		if (isDragging && dragStart !== null && dragEnd !== null) {
-			const start = Math.min(dragStart, dragEnd);
-			const end = Math.max(dragStart, dragEnd);
-			return index >= start && index <= end;
-		}
-
-		// モーダルで選択された期間のハイライト
-		if (selectedPeriod && selectedPeriod.taskId === task.id) {
-			const selectedStartDate = new Date(selectedPeriod.startDate);
-			const selectedEndDate = new Date(selectedPeriod.endDate);
-			const currentDate = dates[index];
-
-			if (currentDate) {
-				// 日付のみで比較するため、時間部分を0にする
-				const currentDateOnly = new Date(
-					currentDate.getFullYear(),
-					currentDate.getMonth(),
-					currentDate.getDate(),
-				);
-				const startDateOnly = new Date(
-					selectedStartDate.getFullYear(),
-					selectedStartDate.getMonth(),
-					selectedStartDate.getDate(),
-				);
-				const endDateOnly = new Date(
-					selectedEndDate.getFullYear(),
-					selectedEndDate.getMonth(),
-					selectedEndDate.getDate(),
-				);
-
-				return (
-					currentDateOnly >= startDateOnly && currentDateOnly <= endDateOnly
-				);
-			}
-		}
-
+	const isDateInPreview = () => {
+		// セル全体のハイライトを廃止
 		return false;
 	};
 
@@ -266,7 +233,7 @@ export function TaskRow({
 					const dateString = format(date, "yyyy-MM-dd");
 					const isToday = dateString === format(new Date(), "yyyy-MM-dd");
 					const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-					const isPreview = isDateInPreview(index);
+					const isPreview = isDateInPreview();
 
 					return (
 						<div
@@ -326,6 +293,79 @@ export function TaskRow({
 					/>
 				);
 			})}
+
+			{/* Preview Period for drag & drop */}
+			{isDragging &&
+				dragStart !== null &&
+				dragEnd !== null &&
+				(() => {
+					const start = Math.min(dragStart, dragEnd);
+					const end = Math.max(dragStart, dragEnd);
+					const duration = end - start + 1;
+
+					// デフォルトタグを使用
+					const defaultTag = getTagById("development") || {
+						id: "default",
+						name: "デフォルト",
+						color: "#6B7280",
+					};
+
+					return (
+						<PreviewPeriod
+							key={`drag-preview-${task.id}`}
+							startOffset={start}
+							duration={duration}
+							tag={defaultTag}
+						/>
+					);
+				})()}
+
+			{/* Preview Period for new creation */}
+			{selectedPeriod &&
+				selectedPeriod.taskId === task.id &&
+				isAddModalOpen &&
+				!isDragging &&
+				(() => {
+					const previewStartDate = selectedPeriod.startDate;
+					const previewEndDate = selectedPeriod.endDate;
+
+					// 既存のPeriodと重複していないかチェック
+					const isOverlapping = task.periods.some(
+						(period) =>
+							period.startDate === previewStartDate &&
+							period.endDate === previewEndDate,
+					);
+
+					// 重複している場合は仮想Periodを表示しない
+					if (isOverlapping) return null;
+
+					const startOffset = dates.findIndex(
+						(date) => format(date, "yyyy-MM-dd") === previewStartDate,
+					);
+					const duration =
+						differenceInDays(
+							new Date(previewEndDate),
+							new Date(previewStartDate),
+						) + 1;
+
+					// デフォルトタグを使用（最初のタグを使用）
+					const defaultTag = getTagById("development") || {
+						id: "default",
+						name: "デフォルト",
+						color: "#6B7280",
+					};
+
+					if (startOffset < 0 || startOffset >= dates.length) return null;
+
+					return (
+						<PreviewPeriod
+							key={`preview-${task.id}`}
+							startOffset={startOffset}
+							duration={duration}
+							tag={defaultTag}
+						/>
+					);
+				})()}
 		</section>
 	);
 }

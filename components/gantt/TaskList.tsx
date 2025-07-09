@@ -19,6 +19,7 @@ interface TaskListProps {
 	onPeriodEdit?: (period: Period, taskId: string) => void;
 	scrollRef?: React.RefObject<HTMLDivElement | null>;
 	onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
+	isAddModalOpen?: boolean;
 }
 
 export function TaskList({
@@ -27,6 +28,7 @@ export function TaskList({
 	onPeriodEdit,
 	scrollRef,
 	onScroll,
+	isAddModalOpen,
 }: TaskListProps) {
 	const { tasks, deleteTask, setEditingTaskId, editingTaskId } =
 		useGanttStore();
@@ -106,6 +108,7 @@ export function TaskList({
 								onPeriodSelect={onPeriodSelect}
 								onPeriodEdit={onPeriodEdit}
 								scrollRef={scrollRef}
+								isAddModalOpen={isAddModalOpen}
 							/>
 						))}
 					</div>

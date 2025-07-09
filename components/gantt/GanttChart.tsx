@@ -151,6 +151,7 @@ export function GanttChart() {
 						onPeriodEdit={handlePeriodEdit}
 						scrollRef={contentScrollRef}
 						onScroll={handleScroll("content")}
+						isAddModalOpen={isModalOpen}
 					/>
 				</div>
 			</div>
