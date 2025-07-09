@@ -5,24 +5,27 @@ import type { Period, Tag, Task } from "@/lib/types/gantt";
 let taskCounter = 0;
 let periodCounter = 0;
 
+/**
+ * 選択された期間の情報を表すインターフェース
+ */
+interface SelectedPeriod {
+	taskId: string;
+	startDate: string;
+	endDate: string;
+	/**
+	 * 編集対象のPeriodのID
+	 * - 編集時: 該当PeriodのIDを設定し、そのPeriodのみが移動対象となる
+	 * - 新規作成時: undefinedのまま、既存Periodには影響しない
+	 */
+	periodId?: string;
+}
+
 interface GanttStore {
 	tasks: Task[];
 	tags: Tag[];
-	selectedPeriod: {
-		taskId: string;
-		startDate: string;
-		endDate: string;
-		periodId?: string; // 編集時のみ設定、新規作成時はundefined
-	} | null;
+	selectedPeriod: SelectedPeriod | null;
 	editingTaskId: string | null;
-	setSelectedPeriod: (
-		period: {
-			taskId: string;
-			startDate: string;
-			endDate: string;
-			periodId?: string;
-		} | null,
-	) => void;
+	setSelectedPeriod: (period: SelectedPeriod | null) => void;
 	updateSelectedPeriod: (
 		startDate: string,
 		endDate: string,
