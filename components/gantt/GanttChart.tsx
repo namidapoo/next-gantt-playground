@@ -1,17 +1,17 @@
 "use client";
 
 import { addDays, subDays } from "date-fns";
+import { Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { Button } from "@/components/ui/button";
 import { useGanttStore } from "@/lib/stores/gantt.store";
 import type { Period } from "@/lib/types/gantt";
 import { AddPeriodModal } from "./AddPeriodModal";
 import { EditPeriodModal } from "./EditPeriodModal";
 import { TaskList } from "./TaskList";
 import { Timeline } from "./Timeline";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
 const DAYS_BEFORE_TODAY = 7;
 const TOTAL_DAYS = 60; // 2ヶ月分
@@ -20,7 +20,8 @@ export function GanttChart() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [editingPeriod, setEditingPeriod] = useState<Period | null>(null);
-	const { selectedPeriod, setSelectedPeriod, addTask, setEditingTaskId } = useGanttStore();
+	const { selectedPeriod, setSelectedPeriod, addTask, setEditingTaskId } =
+		useGanttStore();
 	const timelineScrollRef = useRef<HTMLDivElement>(null);
 	const contentScrollRef = useRef<HTMLDivElement>(null);
 	const ganttContainerRef = useRef<HTMLDivElement>(null);

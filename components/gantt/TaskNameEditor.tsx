@@ -9,7 +9,11 @@ interface TaskNameEditorProps {
 	onFinish: () => void;
 }
 
-export function TaskNameEditor({ taskId, initialName, onFinish }: TaskNameEditorProps) {
+export function TaskNameEditor({
+	taskId,
+	initialName,
+	onFinish,
+}: TaskNameEditorProps) {
 	const [name, setName] = useState(initialName);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -25,7 +29,7 @@ export function TaskNameEditor({ taskId, initialName, onFinish }: TaskNameEditor
 	const handleSubmit = () => {
 		if (isSubmitting) return;
 		setIsSubmitting(true);
-		
+
 		if (name.trim()) {
 			updateTask(taskId, name.trim());
 		} else {
@@ -37,7 +41,7 @@ export function TaskNameEditor({ taskId, initialName, onFinish }: TaskNameEditor
 	const handleCancel = () => {
 		if (isSubmitting) return;
 		setIsSubmitting(true);
-		
+
 		if (initialName === "") {
 			deleteTask(taskId);
 		}
@@ -63,7 +67,7 @@ export function TaskNameEditor({ taskId, initialName, onFinish }: TaskNameEditor
 			onKeyDown={handleKeyDown}
 			onBlur={handleSubmit}
 			className="w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-			placeholder="タスク名を入力"
+			placeholder="Enter task name"
 		/>
 	);
 }
