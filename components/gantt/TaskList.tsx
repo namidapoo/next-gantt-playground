@@ -16,7 +16,7 @@ interface TaskListProps {
 	onPeriodSelect: (
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => void;
-	onPeriodEdit?: (period: Period) => void;
+	onPeriodEdit?: (period: Period, taskId: string) => void;
 	scrollRef?: React.RefObject<HTMLDivElement | null>;
 	onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
 }

@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Period } from "@/lib/types/gantt";
 
 interface DateRangeProps {
@@ -9,7 +9,7 @@ interface DateRangeProps {
 	color: string;
 	dates: Date[];
 	taskId: string;
-	onEdit?: (period: Period) => void;
+	onEdit?: (period: Period, taskId: string) => void;
 }
 
 export function DateRange({
@@ -22,40 +22,56 @@ export function DateRange({
 	onEdit,
 }: DateRangeProps) {
 	const [isDragging, setIsDragging] = useState(false);
-	const [dragType, setDragType] = useState<'start' | 'end' | null>(null);
+	const [dragType, setDragType] = useState<"start" | "end" | null>(null);
 	const [dragStartX, setDragStartX] = useState(0);
 	const [tempOffset, setTempOffset] = useState(startOffset);
 	const [tempDuration, setTempDuration] = useState(duration);
 
-	const handleMouseDown = useCallback((e: React.MouseEvent, type: 'start' | 'end') => {
-		e.preventDefault();
-		e.stopPropagation();
-		setIsDragging(true);
-		setDragType(type);
-		setDragStartX(e.clientX);
-		setTempOffset(startOffset);
-		setTempDuration(duration);
-	}, [startOffset, duration]);
+	const handleMouseDown = useCallback(
+		(e: React.MouseEvent, type: "start" | "end") => {
+			e.preventDefault();
+			e.stopPropagation();
+			setIsDragging(true);
+			setDragType(type);
+			setDragStartX(e.clientX);
+			setTempOffset(startOffset);
+			setTempDuration(duration);
+		},
+		[startOffset, duration],
+	);
 
-	const handleMouseMove = useCallback((e: MouseEvent) => {
-		if (!isDragging || !dragType) return;
+	const handleMouseMove = useCallback(
+		(e: MouseEvent) => {
+			if (!isDragging || !dragType) return;
 
-		const deltaX = e.clientX - dragStartX;
-		const dayDelta = Math.round(deltaX / 40); // 40px per day
+			const deltaX = e.clientX - dragStartX;
+			const dayDelta = Math.round(deltaX / 40); // 40px per day
 
-		if (dragType === 'start') {
-			// 開始日を変更（範囲チェック）
-			const newStartOffset = Math.max(0, Math.min(startOffset + dayDelta, startOffset + duration - 1, dates.length - 1));
-			const newDuration = duration - (newStartOffset - startOffset);
-			setTempOffset(newStartOffset);
-			setTempDuration(newDuration);
-		} else if (dragType === 'end') {
-			// 終了日を変更（範囲チェック）
-			const maxDuration = dates.length - startOffset;
-			const newDuration = Math.max(1, Math.min(duration + dayDelta, maxDuration));
-			setTempDuration(newDuration);
-		}
-	}, [isDragging, dragType, dragStartX, startOffset, duration]);
+			if (dragType === "start") {
+				// 開始日を変更（範囲チェック）
+				const newStartOffset = Math.max(
+					0,
+					Math.min(
+						startOffset + dayDelta,
+						startOffset + duration - 1,
+						dates.length - 1,
+					),
+				);
+				const newDuration = duration - (newStartOffset - startOffset);
+				setTempOffset(newStartOffset);
+				setTempDuration(newDuration);
+			} else if (dragType === "end") {
+				// 終了日を変更（範囲チェック）
+				const maxDuration = dates.length - startOffset;
+				const newDuration = Math.max(
+					1,
+					Math.min(duration + dayDelta, maxDuration),
+				);
+				setTempDuration(newDuration);
+			}
+		},
+		[isDragging, dragType, dragStartX, startOffset, duration, dates.length],
+	);
 
 	const handleMouseUp = useCallback(() => {
 		if (!isDragging || !dragType) return;
@@ -71,23 +87,37 @@ export function DateRange({
 			// 既存期間データに更新された日付を含めて編集モーダルを開く
 			const updatedPeriod = {
 				...period,
-				startDate: format(newStartDate, 'yyyy-MM-dd'),
-				endDate: format(newEndDate, 'yyyy-MM-dd'),
+				startDate: format(newStartDate, "yyyy-MM-dd"),
+				endDate: format(newEndDate, "yyyy-MM-dd"),
 			};
 
 			// 編集のコールバックを呼び出してEditPeriodModalを開く
-			onEdit?.(updatedPeriod);
+			onEdit?.(updatedPeriod, taskId);
 		}
 
 		// 表示を元に戻す
 		setTempOffset(startOffset);
 		setTempDuration(duration);
-	}, [isDragging, dragType, tempOffset, tempDuration, dates, period, onEdit, startOffset, duration]);
+	}, [
+		isDragging,
+		dragType,
+		tempOffset,
+		tempDuration,
+		dates,
+		period,
+		onEdit,
+		startOffset,
+		duration,
+		taskId,
+	]);
 
 	// グローバルマウスイベントリスナー
-	const handleGlobalMouseMove = useCallback((e: MouseEvent) => {
-		handleMouseMove(e);
-	}, [handleMouseMove]);
+	const handleGlobalMouseMove = useCallback(
+		(e: MouseEvent) => {
+			handleMouseMove(e);
+		},
+		[handleMouseMove],
+	);
 
 	const handleGlobalMouseUp = useCallback(() => {
 		handleMouseUp();
@@ -96,13 +126,13 @@ export function DateRange({
 	// ドラッグ中にグローバルリスナーを追加
 	useEffect(() => {
 		if (isDragging) {
-			document.addEventListener('mousemove', handleGlobalMouseMove);
-			document.addEventListener('mouseup', handleGlobalMouseUp);
+			document.addEventListener("mousemove", handleGlobalMouseMove);
+			document.addEventListener("mouseup", handleGlobalMouseUp);
 		}
 
 		return () => {
-			document.removeEventListener('mousemove', handleGlobalMouseMove);
-			document.removeEventListener('mouseup', handleGlobalMouseUp);
+			document.removeEventListener("mousemove", handleGlobalMouseMove);
+			document.removeEventListener("mouseup", handleGlobalMouseUp);
 		};
 	}, [isDragging, handleGlobalMouseMove, handleGlobalMouseUp]);
 
@@ -122,28 +152,44 @@ export function DateRange({
 		>
 			{/* 左端のドラッグハンドル */}
 			<div
+				role="button"
+				tabIndex={0}
 				className="absolute left-0 top-0 w-2 h-full cursor-col-resize hover:bg-black hover:bg-opacity-20 transition-colors"
-				onMouseDown={(e) => handleMouseDown(e, 'start')}
+				onMouseDown={(e) => handleMouseDown(e, "start")}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault();
+					}
+				}}
 				title="開始日を変更"
+				aria-label="開始日を変更するハンドル"
 			/>
-			
+
 			{/* 中央のクリック可能エリア */}
 			<button
 				type="button"
 				className="flex-1 h-full px-2 cursor-pointer hover:brightness-110 transition-all border-none bg-transparent"
 				onClick={(e) => {
 					e.stopPropagation();
-					onEdit?.(period);
+					onEdit?.(period, taskId);
 				}}
 			>
 				<span className="truncate">{period.note}</span>
 			</button>
-			
+
 			{/* 右端のドラッグハンドル */}
 			<div
+				role="button"
+				tabIndex={0}
 				className="absolute right-0 top-0 w-2 h-full cursor-col-resize hover:bg-black hover:bg-opacity-20 transition-colors"
-				onMouseDown={(e) => handleMouseDown(e, 'end')}
+				onMouseDown={(e) => handleMouseDown(e, "end")}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault();
+					}
+				}}
 				title="終了日を変更"
+				aria-label="終了日を変更するハンドル"
 			/>
 		</div>
 	);

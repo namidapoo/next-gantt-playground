@@ -47,10 +47,10 @@ export function GanttChart() {
 		setSelectedPeriod(null);
 	};
 
-	const handlePeriodEdit = (period: Period) => {
+	const handlePeriodEdit = (period: Period, taskId: string) => {
 		setEditingPeriod(period);
 		setSelectedPeriod({
-			taskId: period.taskId,
+			taskId,
 			startDate: period.startDate,
 			endDate: period.endDate,
 		});
