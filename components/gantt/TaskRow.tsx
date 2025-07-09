@@ -349,6 +349,7 @@ export function TaskRow({
 						color={tag?.color || "#6B7280"}
 						dates={dates}
 						taskId={task.id}
+						existingPeriods={task.periods}
 						onEdit={onPeriodEdit}
 					/>
 				);
