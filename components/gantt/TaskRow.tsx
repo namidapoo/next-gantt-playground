@@ -226,7 +226,7 @@ export function TaskRow({
 		}
 
 		// モーダルで選択された期間のハイライト（新規作成時のみ）
-		if (selectedPeriod && selectedPeriod.taskId === task.id && isAddModalOpen) {
+		if (selectedPeriod && selectedPeriod.taskId === task.id && isAddModalOpen && (selectedPeriod.isNew !== false)) {
 			const selectedStartDate = new Date(selectedPeriod.startDate);
 			const selectedEndDate = new Date(selectedPeriod.endDate);
 			const currentDate = dates[index];

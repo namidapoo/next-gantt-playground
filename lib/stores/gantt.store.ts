@@ -12,10 +12,11 @@ interface GanttStore {
 		taskId: string;
 		startDate: string;
 		endDate: string;
+		isNew?: boolean; // 新規作成かどうかを示すフラグ
 	} | null;
 	editingTaskId: string | null;
 	setSelectedPeriod: (
-		period: { taskId: string; startDate: string; endDate: string } | null,
+		period: { taskId: string; startDate: string; endDate: string; isNew?: boolean } | null,
 	) => void;
 	updateSelectedPeriod: (
 		startDate: string,

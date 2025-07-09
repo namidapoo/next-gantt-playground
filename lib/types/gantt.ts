@@ -25,5 +25,6 @@ export interface GanttState {
 		taskId: string;
 		startDate: string;
 		endDate: string;
+		isNew?: boolean;
 	} | null;
 }

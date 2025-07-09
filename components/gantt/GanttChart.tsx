@@ -37,7 +37,7 @@ export function GanttChart() {
 		period: { taskId: string; startDate: string; endDate: string } | null,
 	) => {
 		if (period) {
-			setSelectedPeriod(period);
+			setSelectedPeriod({ ...period, isNew: true });
 			setIsModalOpen(true);
 		}
 	};
@@ -53,6 +53,7 @@ export function GanttChart() {
 			taskId,
 			startDate: period.startDate,
 			endDate: period.endDate,
+			isNew: false,
 		});
 		setIsEditModalOpen(true);
 	};
