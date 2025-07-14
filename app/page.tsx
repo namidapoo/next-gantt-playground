@@ -7,7 +7,7 @@ export default function GanttPage() {
 		<main className="h-screen bg-gray-50 flex flex-col overflow-hidden">
 			<div className="flex-shrink-0 p-4 pb-0">
 				<div className="flex items-center gap-3 mb-4">
-					<h1 className="text-3xl font-bold">Interactive Gantt Chart Demo</h1>
+					<h1 className="text-3xl font-bold">Interactive Gantt Chart</h1>
 					<Badge
 						variant="default"
 						className="px-4 py-1 text-sm bg-blue-500 text-white hover:bg-blue-600 flex items-center gap-1.5"
